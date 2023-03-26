@@ -4,7 +4,7 @@
 
 /.vs/SuperDuperHelper/v16
 /packages
-
+SuperDuperHelper/imgui.ini
 
 ################################################################################
 ########################### imgui .gitignore entries ###########################
