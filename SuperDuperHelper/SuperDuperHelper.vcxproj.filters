@@ -8,6 +8,12 @@
       <UniqueIdentifier>{f18ab499-84e1-499f-8eff-9754361e0e52}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="sources\imgui implementations">
+      <UniqueIdentifier>{74710deb-b86e-4a0e-a570-8150e2b2a0d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fonts">
+      <UniqueIdentifier>{14fb9242-17a8-4ad1-a928-a4337bd7d51f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\imgui-1.89.4\imgui.cpp">
@@ -22,17 +28,17 @@
     <ClCompile Include="main.cpp">
       <Filter>sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\imgui-1.89.4\backends\imgui_impl_sdl2.cpp">
-      <Filter>sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\imgui-1.89.4\backends\imgui_impl_opengl3.cpp">
-      <Filter>sources</Filter>
-    </ClCompile>
     <ClCompile Include="..\imgui-1.89.4\imgui_tables.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\imgui-1.89.4\imgui_widgets.cpp">
       <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui-1.89.4\backends\imgui_impl_opengl3.cpp">
+      <Filter>sources\imgui implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui-1.89.4\backends\imgui_impl_sdl2.cpp">
+      <Filter>sources\imgui implementations</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -45,14 +51,14 @@
     <ClInclude Include="..\imgui-1.89.4\imgui_internal.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="..\imgui-1.89.4\backends\imgui_impl_sdl2.h">
-      <Filter>sources</Filter>
-    </ClInclude>
     <ClInclude Include="..\imgui-1.89.4\backends\imgui_impl_opengl3.h">
-      <Filter>sources</Filter>
+      <Filter>sources\imgui implementations</Filter>
     </ClInclude>
     <ClInclude Include="..\imgui-1.89.4\backends\imgui_impl_opengl3_loader.h">
-      <Filter>sources</Filter>
+      <Filter>sources\imgui implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imgui-1.89.4\backends\imgui_impl_sdl2.h">
+      <Filter>sources\imgui implementations</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -60,5 +66,25 @@
       <Filter>imgui</Filter>
     </None>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="Fonts\Cousine-Regular.ttf">
+      <Filter>Fonts</Filter>
+    </Font>
+    <Font Include="Fonts\DroidSans.ttf">
+      <Filter>Fonts</Filter>
+    </Font>
+    <Font Include="Fonts\Karla-Regular.ttf">
+      <Filter>Fonts</Filter>
+    </Font>
+    <Font Include="Fonts\ProggyClean.ttf">
+      <Filter>Fonts</Filter>
+    </Font>
+    <Font Include="Fonts\ProggyTiny.ttf">
+      <Filter>Fonts</Filter>
+    </Font>
+    <Font Include="Fonts\Roboto-Medium.ttf">
+      <Filter>Fonts</Filter>
+    </Font>
   </ItemGroup>
 </Project>
