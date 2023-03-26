@@ -112,6 +112,7 @@ int main(int, char**)
 
     // GameLink State
     bool activate_gamelink = false;
+	bool activate_sdhr = false;
 
     // Main loop
     bool done = false;
@@ -187,11 +188,32 @@ int main(int, char**)
             ImGui::Begin("GameLink Configuration");
 
             ImGui::Text("Configure GameLink here");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("GameLink Active", &activate_gamelink);
+            if (ImGui::Checkbox("GameLink Active", &activate_gamelink))
+            {
+				if (!GameLink::IsActive() && activate_gamelink)
+					activate_gamelink = GameLink::Init();
+                else if (GameLink::IsActive() && !activate_gamelink)
+					GameLink::Destroy();
+                activate_gamelink = GameLink::IsActive();
+            }
 
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+			if (!activate_gamelink)
+				ImGui::BeginDisabled();
+
+            if (ImGui::Checkbox("Enable SuperDuperHiRes (SDHR)", &activate_sdhr))
+            {
+                if (activate_sdhr)
+                    GameLink::SetVideoModeSDHR();
+                else
+                    GameLink::SetVideoModeNoSDHR();
+            }
+
+			if (!activate_gamelink)
+				ImGui::EndDisabled();
+
+            ImGui::NewLine();
+			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+
 
             if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
                 counter++;
@@ -210,20 +232,6 @@ int main(int, char**)
             if (ImGui::Button("Close Me"))
                 show_another_window = false;
             ImGui::End();
-        }
-
-        // GameLink
-        if (activate_gamelink)
-        {
-            if (!GameLink::IsActive())
-                activate_gamelink = GameLink::Init();
-        }
-        else {
-            if (GameLink::IsActive())
-            {
-                GameLink::Destroy();
-                activate_gamelink = GameLink::IsActive();
-            }
         }
 
         // Rendering
