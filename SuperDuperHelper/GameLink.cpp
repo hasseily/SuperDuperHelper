@@ -306,9 +306,10 @@ void GameLink::SDHR_process()
 
 void GameLink::SDHR_write(BYTE b)
 {
-	const char* write_cmd = ":sdhr_process";
-	UINT16 sz = (UINT16)sizeof(write_cmd) + 1;
-	snprintf((char*)g_p_shared_memory->buf_tohost.data, sz, "%s", write_cmd);
+	std::string write_cmd = ":sdhr_write";
+	write_cmd.push_back(b);
+	UINT16 sz = (UINT16)write_cmd.length() + 1;
+	snprintf((char*)g_p_shared_memory->buf_tohost.data, sz, "%s", write_cmd.c_str());
 	g_p_shared_memory->buf_tohost.data[sz] = b;
 	g_p_shared_memory->buf_tohost.payload = sz;
 }
