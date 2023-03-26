@@ -284,15 +284,35 @@ void GameLink::Shutdown()
 	SendCommand(std::string(":shutdown"));
 }
 
-void GameLink::SetVideoModeSDHR()
+void GameLink::SDHR_on()
 {
 	SendCommand(std::string(":sdhr_on"));
 }
 
-void GameLink::SetVideoModeNoSDHR()
+void GameLink::SDHR_off()
 {
 	SendCommand(std::string(":sdhr_off"));
 }
+
+void GameLink::SDHR_reset()
+{
+	SendCommand(std::string(":sdhr_reset"));
+}
+
+void GameLink::SDHR_process()
+{
+	SendCommand(std::string(":sdhr_process"));
+}
+
+void GameLink::SDHR_write(BYTE b)
+{
+	const char* write_cmd = ":sdhr_process";
+	UINT16 sz = (UINT16)sizeof(write_cmd) + 1;
+	snprintf((char*)g_p_shared_memory->buf_tohost.data, sz, "%s", write_cmd);
+	g_p_shared_memory->buf_tohost.data[sz] = b;
+	g_p_shared_memory->buf_tohost.payload = sz;
+}
+
 
 void GameLink::SetSoundVolume(UINT8 main, UINT8 mockingboard)
 {

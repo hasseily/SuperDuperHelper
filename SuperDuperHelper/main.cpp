@@ -203,10 +203,19 @@ int main(int, char**)
             if (ImGui::Checkbox("Enable SuperDuperHiRes (SDHR)", &activate_sdhr))
             {
                 if (activate_sdhr)
-                    GameLink::SetVideoModeSDHR();
+                    GameLink::SDHR_on();
                 else
-                    GameLink::SetVideoModeNoSDHR();
+                    GameLink::SDHR_off();
             }
+
+			if (ImGui::Button("Write 0xff"))
+				GameLink::SDHR_write(0xff);
+            ImGui::SameLine();
+			if (ImGui::Button("Process"))
+				GameLink::SDHR_process();
+
+			if (ImGui::Button("Reset"))
+				GameLink::SDHR_reset();
 
 			if (!activate_gamelink)
 				ImGui::EndDisabled();

@@ -53,8 +53,11 @@ namespace GameLink
 	extern void Pause();
 	extern void Reset();
 	extern void Shutdown();
-	extern void SetVideoModeSDHR();
-	extern void SetVideoModeNoSDHR();
+	extern void SDHR_on();
+	extern void SDHR_off();
+	extern void SDHR_reset();
+	extern void SDHR_process();
+	extern void SDHR_write(BYTE b);
 
 	extern void SetSoundVolume(UINT8 main, UINT8 mockingboard);
 	extern int GetSoundVolumeMain();
