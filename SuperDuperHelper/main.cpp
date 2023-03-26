@@ -14,10 +14,15 @@
 #include <SDL_opengl.h>
 #endif
 
-// This example can also compile and run with Emscripten! See 'Makefile.emscripten' for details.
+// This can also compile and run with Emscripten! See 'Makefile.emscripten' for details.
 #ifdef __EMSCRIPTEN__
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
 #endif
+#include <map>
+
+#include "Gamelink.h"
+
+std::map<int, bool> keyboard; // Saves the state(true=pressed; false=released) of each SDL_Key.
 
 // Main code
 int main(int, char**)
@@ -105,6 +110,9 @@ int main(int, char**)
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+    // GameLink State
+    bool activate_gamelink = false;
+
     // Main loop
     bool done = false;
 #ifdef __EMSCRIPTEN__
@@ -125,11 +133,42 @@ int main(int, char**)
         while (SDL_PollEvent(&event))
         {
             ImGui_ImplSDL2_ProcessEvent(&event);
+            if (!io.WantCaptureKeyboard)
+            {
+#pragma warning(push)
+#pragma warning( disable : 26812 )    // unscoped enum
+				switch (event.type)
+				{
+				case SDL_KEYDOWN:
+					keyboard[event.key.keysym.sym] = true;
+                    if (GameLink::IsActive())
+                        GameLink::SendKeystroke((UINT)SDL_GetScancodeFromKey(event.key.keysym.sym), true);
+					break;
+				case SDL_KEYUP:
+					keyboard[event.key.keysym.sym] = false;
+                    if (GameLink::IsActive())
+					    GameLink::SendKeystroke((UINT)SDL_GetScancodeFromKey(event.key.keysym.sym), false);
+					break;
+				}
+#pragma warning(pop)
+            }
             if (event.type == SDL_QUIT)
                 done = true;
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
                 done = true;
         }
+        // Sample on how to deal with keyboard events
+        /*
+        if (keyboard.contains(SDLK_RETURN))
+        {
+            if (keyboard.at(SDLK_RETURN) == true)
+                printf("Return has been pressed.\n");
+            else
+                printf("Return has been released.\n");
+        }
+        */
+
+        keyboard.clear();
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -145,11 +184,11 @@ int main(int, char**)
             static float f = 0.0f;
             static int counter = 0;
 
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Begin("GameLink Configuration");
 
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+            ImGui::Text("Configure GameLink here");               // Display some text (you can use a format strings too)
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
+            ImGui::Checkbox("GameLink Active", &activate_gamelink);
 
             ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
@@ -173,6 +212,20 @@ int main(int, char**)
             ImGui::End();
         }
 
+        // GameLink
+        if (activate_gamelink)
+        {
+            if (!GameLink::IsActive())
+                activate_gamelink = GameLink::Init();
+        }
+        else {
+            if (GameLink::IsActive())
+            {
+                GameLink::Destroy();
+                activate_gamelink = GameLink::IsActive();
+            }
+        }
+
         // Rendering
         ImGui::Render();
         glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
@@ -186,6 +239,8 @@ int main(int, char**)
 #endif
 
     // Cleanup
+    if (GameLink::IsActive())
+        GameLink::Destroy();
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
