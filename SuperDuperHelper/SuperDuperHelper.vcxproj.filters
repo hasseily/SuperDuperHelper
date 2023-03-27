@@ -43,6 +43,9 @@
     <ClCompile Include="GameLink.cpp">
       <Filter>sources</Filter>
     </ClCompile>
+    <ClCompile Include="SDHRCommand.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui-1.89.4\imconfig.h">
@@ -64,6 +67,9 @@
       <Filter>sources\imgui implementations</Filter>
     </ClInclude>
     <ClInclude Include="GameLink.h">
+      <Filter>sources</Filter>
+    </ClInclude>
+    <ClInclude Include="SDHRCommand.h">
       <Filter>sources</Filter>
     </ClInclude>
   </ItemGroup>

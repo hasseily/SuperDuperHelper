@@ -168,6 +168,7 @@
     <ClCompile Include="..\imgui-1.89.4\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="GameLink.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SDHRCommand.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui-1.89.4\imconfig.h" />
@@ -177,6 +178,7 @@
     <ClInclude Include="..\imgui-1.89.4\backends\imgui_impl_opengl3.h" />
     <ClInclude Include="..\imgui-1.89.4\backends\imgui_impl_opengl3_loader.h" />
     <ClInclude Include="GameLink.h" />
+    <ClInclude Include="SDHRCommand.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\imgui-1.89.4\misc\debuggers\imgui.natvis" />
