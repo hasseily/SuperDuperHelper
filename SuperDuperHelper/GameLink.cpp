@@ -39,7 +39,7 @@ struct sSharedMMapFrame_R1
 	enum { MAX_WIDTH = 1280 };
 	enum { MAX_HEIGHT = 1024 };
 
-	enum { MAX_PAYLOAD = MAX_WIDTH * MAX_HEIGHT * 4 };
+	enum { MAX_PAYLOAD = (int)MAX_WIDTH * (int)MAX_HEIGHT * 4 };
 	UINT8 buffer[MAX_PAYLOAD];
 };
 
