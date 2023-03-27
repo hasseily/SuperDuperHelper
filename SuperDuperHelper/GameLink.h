@@ -13,6 +13,29 @@
 #include <Windows.h>
 
 #include <string>
+#include <vector>
+
+/**
+ * @brief SDHR Command structures
+*/
+enum class SDHR_CMD {
+	UPLOAD_DATA = 1,
+	DEFINE_TILESET = 2,
+	DEFINE_TILESET_IMMEDIATE = 3,
+	DEFINE_PALETTE = 4,
+	DEFINE_PALETTE_IMMEDIATE = 5,
+	DEFINE_WINDOW = 6,
+	UPDATE_WINDOW_SET_ALL = 7,
+	UPDATE_WINDOW_SINGLE_TILESET = 8,
+	UPDATE_WINDOW_SINGLE_PALETTE = 9,
+	UPDATE_WINDOW_SINGLE_BOTH = 10,
+	UPDATE_WINDOW_SHIFT_TILES = 11,
+	UPDATE_WINDOW_SET_WINDOW_POSITION = 12,
+	UPDATE_WINDOW_ADJUST_WINDOW_VIEW = 13,
+	UPDATE_WINDOW_SET_BITMASKS = 14,
+	UPDATE_WINDOW_ENABLE = 15,
+	READY = 16,
+};
 
 //------------------------------------------------------------------------------
 // Namespace Declaration
@@ -58,8 +81,10 @@ namespace GameLink
 	extern void SDHR_on();
 	extern void SDHR_off();
 	extern void SDHR_reset();
+	extern bool SDHR_IsReadyToProcess();
 	extern void SDHR_process();
-	extern void SDHR_write(BYTE b);
+	extern void SDHR_write(uint8_t* buf, UINT16 buflength);
+	extern void SDHR_write(const std::vector<uint8_t>& v_data);
 
 	extern void SetSoundVolume(UINT8 main, UINT8 mockingboard);
 	extern int GetSoundVolumeMain();

@@ -7,6 +7,7 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
+#include <memory>
 #include <SDL.h>
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <SDL_opengles2.h>
@@ -20,7 +21,7 @@
 #endif
 #include <map>
 
-#include "Gamelink.h"
+#include "SDHRCommand.h"
 
 std::map<int, bool> keyboard; // Saves the state(true=pressed; false=released) of each SDL_Key.
 
@@ -208,11 +209,48 @@ int main(int, char**)
                     GameLink::SDHR_off();
             }
 
-			if (ImGui::Button("Write 0xff"))
-				GameLink::SDHR_write(0xff);
+            if (ImGui::Button("Write Tris"))
+            {
+                auto batcher = SDHRCommandBatcher();
+                uint8_t tile_triangle[] = { 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff };
+                auto c_1 = SDHRCommand_DefineTilesetImmediate(0, 1, 1, 8, 8, tile_triangle, (uint16_t)sizeof(tile_triangle));
+                batcher.AddCommand(&c_1);
+
+                // Use colors 0x7c00 (red) and 0x03e0 (green). Blue is 0x001f
+                uint8_t palette_2color[] = { 0x7c, 0x00, 0x03, 0xe0 };
+                auto c_2 = SDHRCommand_DefinePaletteImmediate(0, 1, palette_2color, 4);
+				batcher.AddCommand(&c_2);
+
+                uint16_t tile_xcount = 80;
+				uint16_t tile_ycount = 45;
+
+                auto c_3 = SDHRCommand_DefineWindow(0, 340, 360, 0, 0, 0, 0, 8, 8, tile_xcount, tile_ycount);
+                batcher.AddCommand(&c_3);
+
+                // Set the tile index for all the tiles
+                auto matrix_tiles = std::make_unique<uint8_t[]>((uint64_t)tile_xcount * tile_ycount);
+                auto mtsize = (uint64_t)tile_xcount * tile_ycount * sizeof(*matrix_tiles.get());
+                memset(matrix_tiles.get(), 0, mtsize);
+                auto c_4 = SDHRCommand_UpdateWindowSingleBoth(0, 0, 0, tile_xcount, tile_ycount, 0, 0, matrix_tiles.get(), mtsize);
+				batcher.AddCommand(&c_4);
+
+                auto c_5 = SDHRCommand_UpdateWindowEnable(0, true);
+				batcher.AddCommand(&c_5);
+
+                batcher.Publish();
+            }
             ImGui::SameLine();
-			if (ImGui::Button("Process"))
-				GameLink::SDHR_process();
+            if (!GameLink::SDHR_IsReadyToProcess())
+            {
+                ImGui::BeginDisabled();
+                ImGui::Button("Process");
+                ImGui::EndDisabled();
+            }
+            else
+            {
+				if (ImGui::Button("Process"))
+					GameLink::SDHR_process();
+            }
 
 			if (ImGui::Button("Reset"))
 				GameLink::SDHR_reset();

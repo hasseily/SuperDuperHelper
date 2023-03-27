@@ -13,6 +13,8 @@
 
 using namespace GameLink;
 
+static bool bReadyToProcess = false;
+
 //------------------------------------------------------------------------------
 // Shared Memory Structure
 //------------------------------------------------------------------------------
@@ -301,13 +303,27 @@ void GameLink::SDHR_reset()
 	SendCommand(std::string(":sdhr_reset"));
 }
 
-void GameLink::SDHR_process()
+bool GameLink::SDHR_IsReadyToProcess()
 {
-	SendCommand(std::string(":sdhr_process"));
+	return bReadyToProcess;
 }
 
-void GameLink::SDHR_write(BYTE b)
+void GameLink::SDHR_process()
 {
+	if (bReadyToProcess)
+	{
+		SendCommand(std::string(":sdhr_process"));
+		bReadyToProcess = false;
+	}
+	else
+	{
+		OutputDebugStringW(L"WARNING: SDHR Buffer not ready to process\n");
+	}
+}
+
+void GameLink::SDHR_write(uint8_t* buf, UINT16 buflength)
+{
+	/*
 	std::vector<uint8_t> define_tileset_immediate;
 	auto& c1 = define_tileset_immediate;
 	c1.push_back(0x03); // SDHR_CMD_DEFINE_TILESET_IMMEDIATE = 3,
@@ -420,12 +436,49 @@ void GameLink::SDHR_write(BYTE b)
 	write_cmd.push_back(p[0]);
 	write_cmd.push_back(p[1]);
 	write_cmd.insert(write_cmd.end(), c6.begin(), c6.end());
-	UINT16 sz = (UINT16)write_cmd.length() + 1;
-	memcpy((char*)g_p_shared_memory->buf_tohost.data, write_cmd.c_str(), sz);
-	g_p_shared_memory->buf_tohost.data[sz] = b;
+	*/
+	const std::string gamelinkCmd = ":sdhr_write";
+	UINT16 sz = buflength + gamelinkCmd.length() + 1 + 3;	// 3 is for the final SDHR_CMD_READY command
+	if (sz < buflength)	// overflow
+	{
+		OutputDebugStringW(L"ERROR: Write buffer is too large, can't prepend the Gamelink command tag!\n");
+		return;
+	}
+	auto ptrdata = (char*)g_p_shared_memory->buf_tohost.data;
+	memcpy(ptrdata, gamelinkCmd.c_str(), gamelinkCmd.length());
+	ptrdata += gamelinkCmd.length();
+	memcpy(ptrdata, buf, buflength);
+	ptrdata += buflength;
+	// final SDHR_CMD_READY command -- size 0x0000, followed by the ID
+	ptrdata[0] = 0;
+	ptrdata[1] = 0;
+	ptrdata[2] = (uint8_t)SDHR_CMD::READY;
 	g_p_shared_memory->buf_tohost.payload = sz;
+	bReadyToProcess = true;
 }
 
+void GameLink::SDHR_write(const std::vector<uint8_t>& v_data)
+{
+	const std::string gamelinkCmd = ":sdhr_write";
+	UINT16 sz = v_data.size() + gamelinkCmd.length() + 1 + 3;	// 3 is for the final SDHR_CMD_READY command
+	if (sz < v_data.size())	// overflow
+	{
+		OutputDebugStringW(L"ERROR: Write vector buffer is too large, can't prepend the Gamelink command tag!\n");
+		return;
+	}
+
+	auto ptrdata = (char*)g_p_shared_memory->buf_tohost.data;
+	memcpy(ptrdata, gamelinkCmd.c_str(), gamelinkCmd.length());
+	ptrdata += gamelinkCmd.length();
+	std::copy(v_data.begin(), v_data.end(), ptrdata);
+	ptrdata += v_data.size();
+	// final SDHR_CMD_READY command -- size 0x0000, followed by the ID
+	ptrdata[0] = 0;
+	ptrdata[1] = 0;
+	ptrdata[2] = (uint8_t)SDHR_CMD::READY;
+	g_p_shared_memory->buf_tohost.payload = sz;
+	bReadyToProcess = true;
+}
 
 void GameLink::SetSoundVolume(UINT8 main, UINT8 mockingboard)
 {
