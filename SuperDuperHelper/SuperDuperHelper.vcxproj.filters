@@ -72,6 +72,9 @@
     <ClInclude Include="SDHRCommand.h">
       <Filter>sources</Filter>
     </ClInclude>
+    <ClInclude Include="font8x8.h">
+      <Filter>sources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\imgui-1.89.4\misc\debuggers\imgui.natvis">

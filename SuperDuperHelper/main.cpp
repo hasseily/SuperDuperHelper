@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <memory>
 #include <SDL.h>
+#include "font8x8.h"
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <SDL_opengles2.h>
 #else
@@ -216,8 +217,11 @@ int main(int, char**)
             {
                 auto batcher = SDHRCommandBatcher();
                 uint8_t tiles[] = { 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, };
-                auto c_1 = SDHRCommand_DefineTilesetImmediate(0, 1, 2, 8, 8, tiles, (uint16_t)sizeof(tiles));
+                auto c_1 = SDHRCommand_DefineTilesetImmediate(0, 1, 2, 8, 8, tiles, (uint32_t)sizeof(tiles));
                 batcher.AddCommand(&c_1);
+
+                auto c_1_1 = SDHRCommand_DefineTilesetImmediate(1, 1, 0, 8, 8, console_font_8x8, (uint32_t)sizeof(console_font_8x8));
+                batcher.AddCommand(&c_1_1);
 
                 // Use colors 0x7c00 (red) and 0x03e0 (green). Blue is 0x001f
                 uint8_t palette_2color[] = { 0x7c, 0x00, 0x03, 0xe0 };
@@ -242,16 +246,20 @@ int main(int, char**)
                 // Set the tile index for all the tiles
                 auto matrix_tiles = std::make_unique<uint8_t[]>((uint64_t)tile_xcount * tile_ycount);
                 auto mtsize = (uint64_t)tile_xcount * tile_ycount * sizeof(*matrix_tiles.get());
-                memset(matrix_tiles.get(), 0, mtsize);
+                uint8_t tile_i = 0;
+                for (auto i = 0; i < mtsize; ++i) {
+                    matrix_tiles[i] = tile_i;
+                    ++tile_i;
+                }
 
-                auto c_4 = SDHRCommand_UpdateWindowSingleBoth(0, 0, 0, tile_xcount, tile_ycount, 0, 0, matrix_tiles.get(), mtsize);
+                auto c_4 = SDHRCommand_UpdateWindowSingleBoth(0, 0, 0, tile_xcount, tile_ycount, 1, 1, matrix_tiles.get(), mtsize);
 				batcher.AddCommand(&c_4);
 
                 auto matrix_tiles2 = std::make_unique<uint8_t[]>((uint64_t)sprite_xcount * sprite_ycount);
                 auto mtsize2 = (uint64_t)sprite_xcount * sprite_ycount * sizeof(*matrix_tiles2.get());
                 memset(matrix_tiles2.get(), 1, mtsize2);
 
-                auto c_4_2 = SDHRCommand_UpdateWindowSingleBoth(1, 0, 0, sprite_xcount, sprite_ycount, 0, 1, matrix_tiles2.get(), mtsize2);
+                auto c_4_2 = SDHRCommand_UpdateWindowSingleBoth(1, 0, 0, sprite_xcount, sprite_ycount, 0, 0, matrix_tiles2.get(), mtsize2);
                 batcher.AddCommand(&c_4_2);
 
                 auto c_5 = SDHRCommand_UpdateWindowEnable(0, true);

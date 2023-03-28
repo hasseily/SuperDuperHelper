@@ -173,7 +173,7 @@ SDHRCommand_UpdateWindowEnable::SDHRCommand_UpdateWindowEnable(uint8_t index, bo
 }
 
 SDHRCommand_DefineTilesetImmediate::SDHRCommand_DefineTilesetImmediate(uint8_t index, uint8_t depth,
-	uint8_t num_entries, uint8_t xdim, uint8_t ydim, uint8_t* data, uint16_t datalen)
+	uint8_t num_entries, uint8_t xdim, uint8_t ydim, uint8_t* data, uint32_t datalen)
 {
 	id = SDHR_CMD::DEFINE_TILESET_IMMEDIATE;
 	v_data.push_back((uint8_t)id);

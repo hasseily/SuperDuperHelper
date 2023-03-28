@@ -44,7 +44,7 @@ class SDHRCommand_DefineTilesetImmediate : public SDHRCommand
 {
 public:
 	SDHRCommand_DefineTilesetImmediate(uint8_t index, uint8_t depth, uint8_t num_entries, 
-		uint8_t xdim, uint8_t ydim, uint8_t* data, uint16_t datalen);
+		uint8_t xdim, uint8_t ydim, uint8_t* data, uint32_t datalen);
 };
 
 class SDHRCommand_DefinePaletteImmediate : public SDHRCommand
