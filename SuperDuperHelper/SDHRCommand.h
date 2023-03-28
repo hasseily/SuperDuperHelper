@@ -81,3 +81,9 @@ public:
 	SDHRCommand_UpdateWindowEnable() : SDHRCommand_UpdateWindowEnable( 0, true) {}
 };
 
+class SDHRCommand_SetWindowPosition : public SDHRCommand
+{
+public:
+	SDHRCommand_SetWindowPosition(uint8_t index,
+		uint16_t xbegin, uint16_t ybegin);
+};
