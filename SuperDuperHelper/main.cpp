@@ -271,6 +271,29 @@ int main(int, char**)
                 batcher.Publish();
                 GameLink::SDHR_process();
             }
+
+			ImGui::SeparatorText("Move Sprite");
+			static int sprite_pos_abs_h = sprite_posx;
+            if (ImGui::SliderInt("Move Sprite Horizontal", &sprite_pos_abs_h, 0, 640))
+            {
+                sprite_posx = sprite_pos_abs_h;
+				auto batcher = SDHRCommandBatcher();
+				auto c1 = SDHRCommand_SetWindowPosition(1, sprite_posx, sprite_posy);
+				batcher.AddCommand(&c1);
+				batcher.Publish();
+				GameLink::SDHR_process();
+            }
+			static int sprite_pos_abs_v = sprite_posy;
+			if (ImGui::SliderInt("Move Sprite Vertical", &sprite_pos_abs_v, 0, 360))
+			{
+				sprite_posy = sprite_pos_abs_v;
+				auto batcher = SDHRCommandBatcher();
+				auto c1 = SDHRCommand_SetWindowPosition(1, sprite_posx, sprite_posy);
+				batcher.AddCommand(&c1);
+				batcher.Publish();
+				GameLink::SDHR_process();
+			}
+
             if (ImGui::Button("Move Sprite Down"))
             {
                 auto batcher = SDHRCommandBatcher();
@@ -327,6 +350,9 @@ int main(int, char**)
 				ImGui::EndDisabled();
 
             ImGui::NewLine();
+
+			ImGui::SeparatorText("Other");
+
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 
 
