@@ -310,6 +310,7 @@ bool GameLink::SDHR_IsReadyToProcess()
 
 void GameLink::SDHR_process()
 {
+	Sleep(100);
 	if (bReadyToProcess)
 	{
 		SendCommand(std::string(":sdhr_process"));

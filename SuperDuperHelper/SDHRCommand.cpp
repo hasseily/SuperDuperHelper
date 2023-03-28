@@ -281,6 +281,7 @@ SDHRCommand_SetWindowPosition::SDHRCommand_SetWindowPosition(uint8_t index,
 	uint16_t xbegin, uint16_t ybegin) {
 	id = SDHR_CMD::UPDATE_WINDOW_SET_WINDOW_POSITION;
 	v_data.push_back((uint8_t)id);
+	v_data.push_back(index);
 	uint8_t* p;
 	p = (uint8_t*)&xbegin;
 	v_data.push_back(p[0]);
@@ -288,4 +289,6 @@ SDHRCommand_SetWindowPosition::SDHRCommand_SetWindowPosition(uint8_t index,
 	p = (uint8_t*)&ybegin;
 	v_data.push_back(p[0]);
 	v_data.push_back(p[1]);
+
+	InsertSizeHeader();
 }
