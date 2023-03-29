@@ -46,6 +46,9 @@
     <ClCompile Include="SDHRCommand.cpp">
       <Filter>sources</Filter>
     </ClCompile>
+    <ClCompile Include="ImageHelper.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui-1.89.4\imconfig.h">
@@ -73,6 +76,12 @@
       <Filter>sources</Filter>
     </ClInclude>
     <ClInclude Include="font8x8.h">
+      <Filter>sources</Filter>
+    </ClInclude>
+    <ClInclude Include="stb_image.h">
+      <Filter>sources</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageHelper.h">
       <Filter>sources</Filter>
     </ClInclude>
   </ItemGroup>
