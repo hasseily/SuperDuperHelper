@@ -14,6 +14,9 @@
     <Filter Include="Fonts">
       <UniqueIdentifier>{14fb9242-17a8-4ad1-a928-a4337bd7d51f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Assets">
+      <UniqueIdentifier>{6d1d2b49-cd22-492a-9eef-6cd892ac964b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\imgui-1.89.4\imgui.cpp">
@@ -110,5 +113,10 @@
     <Font Include="Fonts\Roboto-Medium.ttf">
       <Filter>Fonts</Filter>
     </Font>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\Tiles_Ultima5.png">
+      <Filter>Assets</Filter>
+    </Image>
   </ItemGroup>
 </Project>

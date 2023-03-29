@@ -16,6 +16,8 @@
 #include <SDL_opengl.h>
 #endif
 
+#include "ImageHelper.h"
+
 // This can also compile and run with Emscripten! See 'Makefile.emscripten' for details.
 #ifdef __EMSCRIPTEN__
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
@@ -107,9 +109,18 @@ int main(int, char**)
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
 
+
+    // Load Textures
+	int my_image_width = 0;
+	int my_image_height = 0;
+	GLuint my_image_texture = 0;
+	bool ret = ImageHelper::LoadTextureFromFile("Assets/Tiles_Ultima5.png", &my_image_texture, &my_image_width, &my_image_height);
+	IM_ASSERT(ret);
+
     // Our state
     bool show_demo_window = true;
     bool show_another_window = false;
+	bool show_tileset_window = true;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     // GameLink State
@@ -374,6 +385,18 @@ int main(int, char**)
                 show_another_window = false;
             ImGui::End();
         }
+
+        // 4. Show texture in a window
+        if (show_tileset_window)
+		{
+            ImVec2 vpos = ImVec2(300.f, 100.f);
+            ImGui::SetNextWindowPos(vpos, ImGuiCond_FirstUseEver);
+			ImGui::Begin("Ultima V (Amiga) Tileset", &show_tileset_window);
+			ImGui::Text("pointer = %p", my_image_texture);
+			ImGui::Text("size = %d x %d", my_image_width, my_image_height);
+			ImGui::Image((void*)(intptr_t)my_image_texture, ImVec2(my_image_width, my_image_height));
+			ImGui::End();
+		}
 
         // Rendering
         ImGui::Render();
