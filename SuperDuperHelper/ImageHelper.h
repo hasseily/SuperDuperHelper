@@ -4,6 +4,7 @@
 #else
 #include <SDL_opengl.h>
 #endif
+#include <cstdint>
 
 namespace ImageHelper
 {

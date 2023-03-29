@@ -72,7 +72,7 @@ int main(int, char**)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+    SDL_Window* window = SDL_CreateWindow("SuperDuper Helper", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
@@ -106,6 +106,9 @@ int main(int, char**)
     io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0f);
     io.Fonts->AddFontFromFileTTF("fonts/Roboto-Medium.ttf", 16.0f);
     io.Fonts->AddFontFromFileTTF("fonts/Cousine-Regular.ttf", 15.0f);
+	io.Fonts->AddFontFromFileTTF("fonts/Karla-Regular.ttf", 15.0f);
+	io.Fonts->AddFontFromFileTTF("fonts/ProggyClean.ttf", 15.0f);
+	io.Fonts->AddFontFromFileTTF("fonts/ProggyTiny.ttf", 15.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
 
@@ -118,9 +121,12 @@ int main(int, char**)
 	IM_ASSERT(ret);
 
     // Our state
-    bool show_demo_window = true;
+    bool show_demo_window = false;
     bool show_another_window = false;
 	bool show_tileset_window = true;
+	bool show_gamelink_video_window = true;
+    bool is_gamelink_focused = false;
+
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     // GameLink State
@@ -150,7 +156,7 @@ int main(int, char**)
         while (SDL_PollEvent(&event))
         {
             ImGui_ImplSDL2_ProcessEvent(&event);
-            if (!io.WantCaptureKeyboard)
+            if (is_gamelink_focused)
             {
 #pragma warning(push)
 #pragma warning( disable : 26812 )    // unscoped enum
@@ -397,6 +403,25 @@ int main(int, char**)
 			ImGui::Image((void*)(intptr_t)my_image_texture, ImVec2(my_image_width, my_image_height));
 			ImGui::End();
 		}
+
+		// 4. Show gamelink in a window
+
+        if (show_gamelink_video_window && activate_gamelink)
+        {
+            // Load video
+            auto fbI = GameLink::GetFrameBufferInfo();
+            GLuint gamelink_video_texture = 0;
+            bool ret = ImageHelper::LoadTextureFromMemory(fbI.frameBuffer, &gamelink_video_texture, fbI.width, fbI.height);
+            ImVec2 vpos = ImVec2(300.f, 300.f);
+            ImGui::SetNextWindowPos(vpos, ImGuiCond_FirstUseEver);
+            ImGui::Begin("AppleWin Video", &show_gamelink_video_window);
+            ImGui::Text("size = %d x %d", fbI.width, fbI.height);
+            ImGui::Image((void*)(intptr_t)gamelink_video_texture, ImVec2(fbI.width, fbI.height), ImVec2(0, 1), ImVec2(1, 0));
+            is_gamelink_focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
+            ImGui::End();
+        }
+        else
+            is_gamelink_focused = false;
 
         // Rendering
         ImGui::Render();
