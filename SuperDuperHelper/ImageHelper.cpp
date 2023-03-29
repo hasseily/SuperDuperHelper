@@ -2,6 +2,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include <cstdint>
 
 namespace ImageHelper
 {
@@ -47,5 +48,21 @@ namespace ImageHelper
 		*out_texture = image_texture;
 
 		return true;
+	}
+
+	void convertRGB888toRGB555(const uint8_t* rgb888_buffer, int width, int height, uint16_t* rgb555_buffer) {
+		size_t num_pixels = (size_t)width * height;
+
+		for (size_t i = 0; i < num_pixels; ++i) {
+			uint8_t r = rgb888_buffer[i * 3];
+			uint8_t g = rgb888_buffer[i * 3 + 1];
+			uint8_t b = rgb888_buffer[i * 3 + 2];
+
+			uint16_t r_555 = r >> 3;
+			uint16_t g_555 = g >> 3;
+			uint16_t b_555 = b >> 3;
+
+			rgb555_buffer[i] = (r_555 << 10) | (g_555 << 5) | b_555;
+		}
 	}
 }
