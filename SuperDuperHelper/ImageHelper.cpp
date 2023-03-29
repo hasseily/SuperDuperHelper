@@ -25,7 +25,7 @@ namespace ImageHelper
 		return true;
 	}
 
-	bool LoadTextureFromMemory(const unsigned char* image_data, GLuint* out_texture, const int image_width, const int image_height)
+	bool LoadTextureFromMemory(const unsigned char* image_data, GLuint* out_texture, const int image_width, const int image_height, bool isARGB)
 	{
 		// Create a OpenGL texture identifier
 		GLuint image_texture;
@@ -42,7 +42,10 @@ namespace ImageHelper
 #if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
 		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 #endif
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+		if (isARGB)
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, image_data);
+		else
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
 
 		*out_texture = image_texture;
 

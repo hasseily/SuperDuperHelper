@@ -411,7 +411,7 @@ int main(int, char**)
             // Load video
             auto fbI = GameLink::GetFrameBufferInfo();
             GLuint gamelink_video_texture = 0;
-            bool ret = ImageHelper::LoadTextureFromMemory(fbI.frameBuffer, &gamelink_video_texture, fbI.width, fbI.height);
+            bool ret = ImageHelper::LoadTextureFromMemory(fbI.frameBuffer, &gamelink_video_texture, fbI.width, fbI.height, true);
             ImVec2 vpos = ImVec2(300.f, 300.f);
             ImGui::SetNextWindowPos(vpos, ImGuiCond_FirstUseEver);
             ImGui::Begin("AppleWin Video", &show_gamelink_video_window);
