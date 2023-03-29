@@ -15,8 +15,10 @@ namespace ImageHelper
 		if (image_data == NULL)
 			return false;
 
-		GLuint image_texture;
-		LoadTextureFromMemory(image_data, &image_texture, image_width, image_height);
+		LoadTextureFromMemory(image_data, out_texture, image_width, image_height);
+
+		*out_width = image_width;
+		*out_height = image_height;
 
 		stbi_image_free(image_data);
 
