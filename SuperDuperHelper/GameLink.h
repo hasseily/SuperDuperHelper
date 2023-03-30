@@ -19,6 +19,7 @@
  * @brief SDHR Command structures
 */
 enum class SDHR_CMD {
+	NONE = 0,
 	UPLOAD_DATA = 1,
 	DEFINE_IMAGE_ASSET = 2,
 	DEFINE_IMAGE_ASSET_FILENAME = 3,

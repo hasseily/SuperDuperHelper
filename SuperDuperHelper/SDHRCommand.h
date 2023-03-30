@@ -139,7 +139,7 @@ struct UpdateWindowEnableCmd {
 class SDHRCommand
 {
 public:
-	SDHR_CMD id;
+	SDHR_CMD id = SDHR_CMD::NONE;
 	std::vector<uint8_t> v_data;
 };
 
