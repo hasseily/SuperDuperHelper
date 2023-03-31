@@ -16,6 +16,9 @@ void SDHRCommandBatcher::Publish()
 	v_fulldata.reserve(vecsize);
 	for (auto& cmd : v_cmds)
 	{
+		uint16_t cmd_size = cmd->v_data.size() - 1;
+		uint8_t* p_cmdsize = (uint8_t*)&cmd_size;
+		v_fulldata.insert(v_fulldata.end(), p_cmdsize, p_cmdsize + 2);
 		v_fulldata.insert(v_fulldata.end(), cmd->v_data.begin(), cmd->v_data.end());
 	}
 	GameLink::SDHR_write(v_fulldata);
@@ -43,7 +46,8 @@ SDHRCommand_DefineTilesetImmediate::SDHRCommand_DefineTilesetImmediate(DefineTil
 	for (size_t i = 0; i < (sizeof(DefineTilesetImmediateCmd) - sizeof(uint8_t*)); i++) { v_data.push_back(p[i]); };
 	// push the data field
 	p = cmd->data;
-	for (size_t i = 0; i < (size_t)4 * cmd->num_entries; i++) { v_data.push_back(p[i]); };
+	size_t entries = (cmd->num_entries == 0) ? 256 : cmd->num_entries;
+	for (size_t i = 0; i < (size_t)4 * entries; i++) { v_data.push_back(p[i]); };
 }
 
 SDHRCommand_DefineWindow::SDHRCommand_DefineWindow(DefineWindowCmd* cmd)
