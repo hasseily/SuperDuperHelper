@@ -168,7 +168,7 @@
     <ClCompile Include="..\imgui-1.89.4\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="GameLink.cpp" />
     <ClCompile Include="ImageHelper.cpp" />
-    <ClCompile Include="lib\ImGuiFileDialog\ImGuiFileDialog.cpp" />
+    <ClCompile Include="ImGuiFileDialog\ImGuiFileDialog.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SDHRCommand.cpp" />
   </ItemGroup>
@@ -182,8 +182,8 @@
     <ClInclude Include="font8x8.h" />
     <ClInclude Include="GameLink.h" />
     <ClInclude Include="ImageHelper.h" />
-    <ClInclude Include="lib\ImGuiFileDialog\ImGuiFileDialog.h" />
-    <ClInclude Include="lib\ImGuiFileDialog\ImGuiFileDialogConfig.h" />
+    <ClInclude Include="ImGuiFileDialog\ImGuiFileDialog.h" />
+    <ClInclude Include="ImGuiFileDialog\ImGuiFileDialogConfig.h" />
     <ClInclude Include="SDHRCommand.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>

@@ -55,7 +55,7 @@
     <ClCompile Include="ImageHelper.cpp">
       <Filter>sources</Filter>
     </ClCompile>
-    <ClCompile Include="lib\ImGuiFileDialog\ImGuiFileDialog.cpp">
+    <ClCompile Include="ImGuiFileDialog\ImGuiFileDialog.cpp">
       <Filter>Other</Filter>
     </ClCompile>
   </ItemGroup>
@@ -93,10 +93,10 @@
     <ClInclude Include="ImageHelper.h">
       <Filter>sources</Filter>
     </ClInclude>
-    <ClInclude Include="lib\ImGuiFileDialog\ImGuiFileDialog.h">
+    <ClInclude Include="ImGuiFileDialog\ImGuiFileDialog.h">
       <Filter>Other</Filter>
     </ClInclude>
-    <ClInclude Include="lib\ImGuiFileDialog\ImGuiFileDialogConfig.h">
+    <ClInclude Include="ImGuiFileDialog\ImGuiFileDialogConfig.h">
       <Filter>Other</Filter>
     </ClInclude>
   </ItemGroup>
