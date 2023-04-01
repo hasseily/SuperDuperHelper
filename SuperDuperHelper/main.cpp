@@ -234,6 +234,16 @@ int main(int, char**)
             {
                 auto batcher = SDHRCommandBatcher();
 
+                DefineImageAssetFilenameCmd sc0;
+                sc0.asset_index = 0;
+                const std::string fname = "D:\\Repos\\SuperDuperHelper\\SuperDuperHelper\\Assets\\Tiles_Ultima5.png";
+                sc0.filename = (uint8_t*)fname.c_str();
+                sc0.filename_length = fname.length();
+
+                auto c_0 = SDHRCommand_DefineImageAssetFilename(&sc0);
+				batcher.AddCommand(&c_0);
+
+
                 uint8_t tiles[] = { 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, };
                 DefineTilesetImmediateCmd sc1;
                 sc1.asset_index = 0;

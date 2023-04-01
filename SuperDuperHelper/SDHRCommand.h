@@ -141,6 +141,8 @@ class SDHRCommand
 public:
 	SDHR_CMD id = SDHR_CMD::NONE;
 	std::vector<uint8_t> v_data;
+protected:
+	void InsertSizeHeader();
 };
 
 class SDHRCommand_UploadData : public SDHRCommand
