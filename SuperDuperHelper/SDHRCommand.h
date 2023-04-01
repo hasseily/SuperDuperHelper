@@ -50,7 +50,7 @@ struct DefineImageAssetCmd {
 struct DefineImageAssetFilenameCmd {
 	uint8_t asset_index;
 	uint8_t filename_length;
-	uint8_t* filename;  // don't include the trailing null either in the data or counted in the filename_length
+	const char* filename;  // don't include the trailing null either in the data or counted in the filename_length
 };
 
 struct DefineTilesetCmd {

@@ -16,6 +16,9 @@ void SDHRCommandBatcher::Publish()
 	v_fulldata.reserve(vecsize);
 	for (auto& cmd : v_cmds)
 	{
+		uint16_t cmd_size = cmd->v_data.size() - 1;
+		uint8_t* p_cmdsize = (uint8_t*)&cmd_size;
+		v_fulldata.insert(v_fulldata.end(), p_cmdsize, p_cmdsize + 2);
 		v_fulldata.insert(v_fulldata.end(), cmd->v_data.begin(), cmd->v_data.end());
 	}
 	GameLink::SDHR_write(v_fulldata);

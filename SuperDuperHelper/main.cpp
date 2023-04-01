@@ -17,6 +17,7 @@
 #endif
 
 #include "ImageHelper.h"
+#include "ImGuiFileDialog/ImGuiFileDialog.h"
 
 // This can also compile and run with Emscripten! See 'Makefile.emscripten' for details.
 #ifdef __EMSCRIPTEN__
@@ -219,6 +220,27 @@ int main(int, char**)
                 activate_gamelink = GameLink::IsActive();
             }
 
+            bool ofd = false;
+            if (ImGui::Button("Select File"))
+            {
+                ImGui::Begin("File Dialog", &ofd);
+                ImGuiFileDialog instance_a;
+                instance_a.OpenDialog("ChooseFileDlgKey", "Choose File", ".png", ".");
+				if (instance_a.Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(2000.f, 2000.f), ImVec2(10000.f, 10000.f)))
+				{
+					// action if OK
+					if (instance_a.IsOk())
+					{
+                        std::string asset_name = instance_a.GetFilePathName();
+						std::string filePath = instance_a.GetCurrentPath();
+					}
+
+					// close
+                    instance_a.Close();
+				}
+                ImGui::End();
+            }
+
 			if (!activate_gamelink)
 				ImGui::BeginDisabled();
 
@@ -234,96 +256,95 @@ int main(int, char**)
             {
                 auto batcher = SDHRCommandBatcher();
 
-                DefineImageAssetFilenameCmd sc0;
-                sc0.asset_index = 0;
-                const std::string fname = "D:\\Repos\\SuperDuperHelper\\SuperDuperHelper\\Assets\\Tiles_Ultima5.png";
-                sc0.filename = (uint8_t*)fname.c_str();
-                sc0.filename_length = fname.length();
+                DefineImageAssetFilenameCmd asset_cmd;
+                asset_cmd.asset_index = 0;
+                std::string asset_name;
+				ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".cpp,.h,.hpp",
+					".", 1, nullptr, ImGuiFileDialogFlags_Modal);
+                if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+				{
+					// action if OK
+					if (ImGuiFileDialog::Instance()->IsOk())
+					{
+						asset_name = ImGuiFileDialog::Instance()->GetFilePathName();
+						std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+					}
 
-                auto c_0 = SDHRCommand_DefineImageAssetFilename(&sc0);
-				batcher.AddCommand(&c_0);
+					// close
+					ImGuiFileDialog::Instance()->Close();
+				}
+                asset_cmd.filename_length = asset_name.length();
+                asset_cmd.filename = asset_name.c_str();
+                auto assetc = SDHRCommand_DefineImageAssetFilename(&asset_cmd);
+                batcher.AddCommand(&assetc);
 
-
-                uint8_t tiles[] = { 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, };
-                DefineTilesetImmediateCmd sc1;
-                sc1.asset_index = 0;
-                sc1.tileset_index = 0;
-                sc1.num_entries = 2;
-                sc1.xdim = 8;
-                sc1.ydim = 8;
-                sc1.data = tiles;
-
-                auto c_1 = SDHRCommand_DefineTilesetImmediate(&sc1);
-                batcher.AddCommand(&c_1);
-
-                DefineWindowCmd sc2;
-                sc2.window_index = 0;
-                sc2.screen_xcount = 640;
-                sc2.screen_ycount = 360;
-                sc2.screen_xbegin = 0;
-                sc2.screen_ybegin = 0;
-                sc2.tile_xbegin = 0;
-                sc2.tile_ybegin = 0;
-                sc2.tile_xdim = sc1.xdim;
-                sc2.tile_ydim = sc1.ydim;
-                sc2.tile_xcount = 80;
-                sc2.tile_ycount = 45;
-                auto c_3 = SDHRCommand_DefineWindow(&sc2);
-                batcher.AddCommand(&c_3);
-
-                DefineWindowCmd sc3 = sc2;
-                sc3.window_index = 1;
-                sc3.screen_xcount = 32;
-                sc3.screen_ycount = 32;
-                sc3.tile_xcount = 4;
-                sc3.tile_ycount = 4;
-                auto c_3_1 = SDHRCommand_DefineWindow(&sc3);
-                batcher.AddCommand(&c_3_1);
-
-                // Set the tile index for all the tiles
-                auto matrix_tiles = std::make_unique<uint8_t[]>((uint64_t)sc2.tile_xcount * sc2.tile_ycount);
-                auto mtsize = (uint64_t)sc2.tile_xcount * sc2.tile_ycount * sizeof(*matrix_tiles.get());
-                uint8_t tile_i = 0;
-                for (auto i = 0; i < mtsize; ++i) {
-                    matrix_tiles[i] = tile_i;
-                    ++tile_i;
+                std::vector<uint16_t> set1_addresses;
+                std::vector<uint16_t> set2_addresses;
+                for (auto i = 0; i < 256; ++i) {
+                    set1_addresses.push_back(i % 32); // x coordinate of tile from PNG
+                    set2_addresses.push_back(i % 32);
+                    set1_addresses.push_back(i / 32); // y coordinate of tile from PNG
+                    set2_addresses.push_back(8 + (i / 32));
                 }
 
-                UpdateWindowSetBothCmd sc4;
-                sc4.window_index = 0;
-                sc4.tile_xbegin = 0;
-                sc4.tile_ybegin = 0;
-                sc4.tile_xcount = sc2.tile_xcount;
-                sc4.tile_ycount = sc2.tile_ycount;
-                sc4.data = matrix_tiles.get();
-                auto c_4 = SDHRCommand_UpdateWindowSetBoth(&sc4);
-				batcher.AddCommand(&c_4);
+                DefineTilesetImmediateCmd set1;
+                set1.asset_index = 0;
+                set1.tileset_index = 0;
+                set1.num_entries = 0; // 0 means 256
+                set1.xdim = 16;
+                set1.ydim = 16;
+                set1.data = (uint8_t*)set1_addresses.data();
+                auto set1_cmd = SDHRCommand_DefineTilesetImmediate(&set1);
+                batcher.AddCommand(&set1_cmd);
 
-                auto matrix_tiles2 = std::make_unique<uint8_t[]>((uint64_t)sc3.tile_xcount * sc3.tile_ycount);
-                auto mtsize2 = (uint64_t)sc3.tile_xcount * sc3.tile_ycount * sizeof(*matrix_tiles2.get());
-                memset(matrix_tiles2.get(), 1, mtsize2);
+                DefineTilesetImmediateCmd set2;
+                set2.asset_index = 0;
+                set2.tileset_index = 1;
+                set2.num_entries = 0; // 0 means 256
+                set2.xdim = 16;
+                set2.ydim = 16;
+                set2.data = (uint8_t*)set2_addresses.data();
+                auto set2_cmd = SDHRCommand_DefineTilesetImmediate(&set2);
+                batcher.AddCommand(&set2_cmd);
 
-				UpdateWindowSetBothCmd sc4_2;
-                sc4_2.window_index = 1;
-                sc4_2.tile_xbegin = 0;
-                sc4_2.tile_ybegin = 0;
-                sc4_2.tile_xcount = sc3.tile_xcount;
-                sc4_2.tile_ycount = sc3.tile_ycount;
-                sc4_2.data = matrix_tiles2.get();
-				auto c_4_2 = SDHRCommand_UpdateWindowSetBoth(&sc4_2);
-                batcher.AddCommand(&c_4_2);
+                DefineWindowCmd w;
+                w.window_index = 0;
+                w.screen_xcount = 640;
+                w.screen_ycount = 352;
+                w.screen_xbegin = 0;
+                w.screen_ybegin = 0;
+                w.tile_xbegin = 0;
+                w.tile_ybegin = 0;
+                w.tile_xdim = set1.xdim;
+                w.tile_ydim = set1.ydim;
+                w.tile_xcount = 40;
+                w.tile_ycount = 22;
+                auto w_cmd = SDHRCommand_DefineWindow(&w);
+                batcher.AddCommand(&w_cmd);
 
-                UpdateWindowEnableCmd sc5;
-                sc5.window_index = 0;
-                sc5.enabled = 1;
-                auto c_5 = SDHRCommand_UpdateWindowEnable(&sc5);
-				batcher.AddCommand(&c_5);
+                // Set the tile index for all the tiles
+                auto matrix_tiles = std::make_unique<uint8_t[]>((uint64_t)w.tile_xcount * w.tile_ycount);
+                auto mtsize = (uint64_t)w.tile_xcount * w.tile_ycount * sizeof(*matrix_tiles.get());
+                for (auto i = 0; i < mtsize; ++i) {
+                    matrix_tiles[i] = i % 256;
+                }
 
-				UpdateWindowEnableCmd sc5_2;
-				sc5_2.window_index = 1;
-				sc5_2.enabled = 1;
-                auto c_5_2 = SDHRCommand_UpdateWindowEnable(&sc5_2);
-                batcher.AddCommand(&c_5_2);
+                UpdateWindowSingleTilesetCmd set_tiles;
+                set_tiles.window_index = 0;
+                set_tiles.tile_xbegin = 0;
+                set_tiles.tile_ybegin = 0;
+                set_tiles.tile_xcount = w.tile_xcount;
+                set_tiles.tile_ycount = w.tile_ycount;
+                set_tiles.tileset_index = 0;
+                set_tiles.data = matrix_tiles.get();
+                auto set_tiles_cmd = SDHRCommand_UpdateWindowSingleTileset(&set_tiles);
+				batcher.AddCommand(&set_tiles_cmd);
+
+                UpdateWindowEnableCmd w_enable;
+                w_enable.window_index = 0;
+                w_enable.enabled = true;
+                auto w_enable_cmd = SDHRCommand_UpdateWindowEnable(&w_enable);
+                batcher.AddCommand(&w_enable_cmd);
 
                 batcher.Publish();
                 GameLink::SDHR_process();

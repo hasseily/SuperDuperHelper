@@ -268,9 +268,27 @@ bool GameLink::IsTrackingOnly()
 
 void GameLink::SendCommand(std::string command)
 {
-	UINT16 sz = (UINT16)command.size() + 1;
-	g_p_shared_memory->buf_tohost.payload = sz;
-	snprintf((char *)g_p_shared_memory->buf_tohost.data, sz, "%s", command.c_str());
+	DWORD dwWaitResult = WaitForSingleObject(g_mutex_handle, 3000);
+	switch (dwWaitResult)
+	{
+	case WAIT_OBJECT_0:
+	{
+		UINT16 sz = (UINT16)command.size() + 1;
+		g_p_shared_memory->buf_tohost.payload = sz;
+		snprintf((char*)g_p_shared_memory->buf_tohost.data, sz, "%s", command.c_str());
+		ReleaseMutex(g_mutex_handle);
+		break;
+	}
+	case WAIT_ABANDONED:
+		ReleaseMutex(g_mutex_handle);
+		[[fallthrough]];
+	case WAIT_TIMEOUT:
+		[[fallthrough]];
+	case WAIT_FAILED:
+		[[fallthrough]];
+	default:
+		break;
+	}
 }
 
 void GameLink::Pause()
@@ -324,120 +342,6 @@ void GameLink::SDHR_process()
 
 void GameLink::SDHR_write(uint8_t* buf, UINT16 buflength)
 {
-	/*
-	std::vector<uint8_t> define_tileset_immediate;
-	auto& c1 = define_tileset_immediate;
-	c1.push_back(0x03); // SDHR_CMD_DEFINE_TILESET_IMMEDIATE = 3,
-	c1.push_back(0x00); // tileset_index 0
-	c1.push_back(0x01); // depth 1 (mono)
-	c1.push_back(0x01); // num_entries (1);
-	c1.push_back(0x08); // xdim (8 pixels)
-	c1.push_back(0x08); // ydim (8 pixels)
-	c1.push_back(0x01); // data (8 bytes, 1 bit per pixel
-	c1.push_back(0x03);
-	c1.push_back(0x07);
-	c1.push_back(0x0f);
-	c1.push_back(0x1f);
-	c1.push_back(0x3f);
-	c1.push_back(0x7f);
-	c1.push_back(0xff);
-
-	std::vector<uint8_t> define_palette_immediate;
-	auto& c2 = define_palette_immediate;
-	c2.push_back(0x05); // SDHR_CMD_DEFINE_PALETTE_IMMEDIATE = 5,
-	c2.push_back(0x00); // palette index 0
-	c2.push_back(0x01); // depth 1 (mono)
-	c2.push_back(0x00); // 2 byte RGB555 black
-	c2.push_back(0x00);
-	c2.push_back(0x7f); // 2 byte RGB555 white
-	c2.push_back(0xff);
-
-	std::vector<uint8_t> define_window;
-	auto& c3 = define_window;
-	c3.push_back(0x06); // SDHR_CMD_DEFINE_WINDOW = 6,
-	c3.push_back(0x00); // window index 0
-	uint16_t screen_xcount = 640;
-	uint16_t screen_ycount = 360;
-	uint8_t* p;
-	p = (uint8_t*)&screen_xcount;
-	c3.push_back(p[0]); // screeen_xcount
-	c3.push_back(p[1]);
-	p = (uint8_t*)&screen_ycount;
-	c3.push_back(p[0]); // screen_ycount
-	c3.push_back(p[1]);
-	c3.push_back(0x00); // screen_xbegin
-	c3.push_back(0x00);
-	c3.push_back(0x00); // screen_ybegin
-	c3.push_back(0x00);
-	c3.push_back(0x00); // tile_xbegin
-	c3.push_back(0x00);
-	c3.push_back(0x00); // tile_ybegin
-	c3.push_back(0x00);
-	c3.push_back(0x08); // tile_xdim;
-	c3.push_back(0x00);
-	c3.push_back(0x08); // tile_ydim;
-	c3.push_back(0x00);
-	c3.push_back(80); // tile_xcount;
-	c3.push_back(0x00);
-	c3.push_back(45); // tile_ycount;
-	c3.push_back(0x00);
-
-	std::vector<uint8_t> update_window_single_both;
-	auto& c4 = update_window_single_both;
-	c4.push_back(10); // SDHR_CMD_UPDATE_WINDOW_SINGLE_BOTH = 10,
-	c4.push_back(0x00); // window index 0
-	c4.push_back(0x00); // tile_xbegin
-	c4.push_back(0x00);
-	c4.push_back(0x00); // tile_ybegin
-	c4.push_back(0x00);
-	c4.push_back(80); // tile_xcount
-	c4.push_back(0x00);
-	c4.push_back(45); // tile_ycount
-	c4.push_back(0x00);
-	c4.push_back(0x00); // tileset_index 0
-	c4.push_back(0x00); // palette_index 0
-	for (auto i = 0; i < 80 * 45; ++i) {
-		c4.push_back(0x00); // tile index 0 (for all tiles)
-	}
-
-	std::vector<uint8_t> update_window_enable;
-	auto& c5 = update_window_enable;
-	c5.push_back(15); //SDHR_CMD_UPDATE_WINDOW_ENABLE = 15,
-	c5.push_back(0x00); // window index 0
-	c5.push_back(0x01); // enabled = true
-
-	std::vector<uint8_t> ready;
-	auto& c6 = ready;
-	c6.push_back(16); // SDHR_CMD_READY = 16,
-
-	std::string write_cmd = ":sdhr_write";
-	uint16_t cmd_size;
-	p = (uint8_t*)&cmd_size;
-	cmd_size = c1.size() - 1;
-	write_cmd.push_back(p[0]);
-	write_cmd.push_back(p[1]);
-	write_cmd.insert(write_cmd.end(), c1.begin(), c1.end());
-	cmd_size = c2.size() - 1;
-	write_cmd.push_back(p[0]);
-	write_cmd.push_back(p[1]);
-	write_cmd.insert(write_cmd.end(), c2.begin(), c2.end());
-	cmd_size = c3.size() - 1;
-	write_cmd.push_back(p[0]);
-	write_cmd.push_back(p[1]);
-	write_cmd.insert(write_cmd.end(), c3.begin(), c3.end());
-	cmd_size = c4.size() - 1;
-	write_cmd.push_back(p[0]);
-	write_cmd.push_back(p[1]);
-	write_cmd.insert(write_cmd.end(), c4.begin(), c4.end());
-	cmd_size = c5.size() - 1;
-	write_cmd.push_back(p[0]);
-	write_cmd.push_back(p[1]);
-	write_cmd.insert(write_cmd.end(), c5.begin(), c5.end());
-	cmd_size = c6.size() - 1;
-	write_cmd.push_back(p[0]);
-	write_cmd.push_back(p[1]);
-	write_cmd.insert(write_cmd.end(), c6.begin(), c6.end());
-	*/
 	const std::string gamelinkCmd = ":sdhr_write";
 	UINT16 sz = buflength + gamelinkCmd.length() + 1 + 3;	// 3 is for the final SDHR_CMD_READY command
 	if (sz < buflength)	// overflow
@@ -445,17 +349,36 @@ void GameLink::SDHR_write(uint8_t* buf, UINT16 buflength)
 		OutputDebugStringW(L"ERROR: Write buffer is too large, can't prepend the Gamelink command tag!\n");
 		return;
 	}
-	auto ptrdata = (char*)g_p_shared_memory->buf_tohost.data;
-	memcpy(ptrdata, gamelinkCmd.c_str(), gamelinkCmd.length());
-	ptrdata += gamelinkCmd.length();
-	memcpy(ptrdata, buf, buflength);
-	ptrdata += buflength;
-	// final SDHR_CMD_READY command -- size 0x0000, followed by the ID
-	ptrdata[0] = 0;
-	ptrdata[1] = 0;
-	ptrdata[2] = (uint8_t)SDHR_CMD::READY;
-	g_p_shared_memory->buf_tohost.payload = sz;
-	bReadyToProcess = true;
+
+	DWORD dwWaitResult = WaitForSingleObject(g_mutex_handle, 3000);
+	switch (dwWaitResult)
+	{
+	case WAIT_OBJECT_0:
+	{
+		auto ptrdata = (char*)g_p_shared_memory->buf_tohost.data;
+		memcpy(ptrdata, gamelinkCmd.c_str(), gamelinkCmd.length());
+		ptrdata += gamelinkCmd.length();
+		memcpy(ptrdata, buf, buflength);
+		ptrdata += buflength;
+		// final SDHR_CMD_READY command -- size 0x0000, followed by the ID
+		ptrdata[0] = 0;
+		ptrdata[1] = 0;
+		ptrdata[2] = (uint8_t)SDHR_CMD::READY;
+		g_p_shared_memory->buf_tohost.payload = sz;
+		bReadyToProcess = true;
+		ReleaseMutex(g_mutex_handle);
+		break;
+	}
+	case WAIT_ABANDONED:
+		ReleaseMutex(g_mutex_handle);
+		[[fallthrough]];
+	case WAIT_TIMEOUT:
+		[[fallthrough]];
+	case WAIT_FAILED:
+		[[fallthrough]];
+	default:
+		break;
+	}
 }
 
 void GameLink::SDHR_write(const std::vector<uint8_t>& v_data)
@@ -468,17 +391,35 @@ void GameLink::SDHR_write(const std::vector<uint8_t>& v_data)
 		return;
 	}
 
-	auto ptrdata = (char*)g_p_shared_memory->buf_tohost.data;
-	memcpy(ptrdata, gamelinkCmd.c_str(), gamelinkCmd.length());
-	ptrdata += gamelinkCmd.length();
-	std::copy(v_data.begin(), v_data.end(), ptrdata);
-	ptrdata += v_data.size();
-	// final SDHR_CMD_READY command -- size 0x0000, followed by the ID
-	ptrdata[0] = 0;
-	ptrdata[1] = 0;
-	ptrdata[2] = (uint8_t)SDHR_CMD::READY;
-	g_p_shared_memory->buf_tohost.payload = sz;
-	bReadyToProcess = true;
+	DWORD dwWaitResult = WaitForSingleObject(g_mutex_handle, 3000);
+	switch (dwWaitResult)
+	{
+	case WAIT_OBJECT_0:
+	{
+		auto ptrdata = (char*)g_p_shared_memory->buf_tohost.data;
+		memcpy(ptrdata, gamelinkCmd.c_str(), gamelinkCmd.length());
+		ptrdata += gamelinkCmd.length();
+		std::copy(v_data.begin(), v_data.end(), ptrdata);
+		ptrdata += v_data.size();
+		// final SDHR_CMD_READY command -- size 0x0000, followed by the ID
+		ptrdata[0] = 0;
+		ptrdata[1] = 0;
+		ptrdata[2] = (uint8_t)SDHR_CMD::READY;
+		g_p_shared_memory->buf_tohost.payload = sz;
+		bReadyToProcess = true;
+		ReleaseMutex(g_mutex_handle);
+		break;
+	}
+	case WAIT_ABANDONED:
+		ReleaseMutex(g_mutex_handle);
+		[[fallthrough]];
+	case WAIT_TIMEOUT:
+		[[fallthrough]];
+	case WAIT_FAILED:
+		[[fallthrough]];
+	default:
+		break;
+	}
 }
 
 void GameLink::SetSoundVolume(UINT8 main, UINT8 mockingboard)
