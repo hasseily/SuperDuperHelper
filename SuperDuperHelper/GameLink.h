@@ -82,9 +82,7 @@ namespace GameLink
 	extern void SDHR_on();
 	extern void SDHR_off();
 	extern void SDHR_reset();
-	extern bool SDHR_IsReadyToProcess();
-	extern void SDHR_process();
-	extern void SDHR_write(uint8_t* buf, UINT16 buflength);
+	//extern void SDHR_write(uint8_t* buf, UINT16 buflength);
 	extern void SDHR_write(const std::vector<uint8_t>& v_data);
 
 	extern void SetSoundVolume(UINT8 main, UINT8 mockingboard);

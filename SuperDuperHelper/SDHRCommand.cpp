@@ -22,6 +22,7 @@ void SDHRCommandBatcher::Publish()
 		v_fulldata.insert(v_fulldata.end(), cmd->v_data.begin(), cmd->v_data.end());
 	}
 	GameLink::SDHR_write(v_fulldata);
+	GameLink::SendCommand(std::string(":sdhr_process"));
 }
 
 void SDHRCommandBatcher::AddCommand(SDHRCommand* command)
@@ -80,7 +81,7 @@ SDHRCommand_UpdateWindowSetBoth::SDHRCommand_UpdateWindowSetBoth(UpdateWindowSet
 	for (size_t i = 0; i < (sizeof(UpdateWindowSetBothCmd) - sizeof(uint8_t*)); i++) { v_data.push_back(p[i]); };
 	// push the data field
 	p = cmd->data;
-	for (size_t i = 0; i < (size_t)cmd->tile_xcount * cmd->tile_ycount; i++) { v_data.push_back(p[i]); };
+	for (size_t i = 0; i < (size_t)cmd->tile_xcount * cmd->tile_ycount * 2; i++) { v_data.push_back(p[i]); };
 	InsertSizeHeader();
 }
 
