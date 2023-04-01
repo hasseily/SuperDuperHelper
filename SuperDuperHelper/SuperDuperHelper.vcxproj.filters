@@ -17,6 +17,9 @@
     <Filter Include="Assets">
       <UniqueIdentifier>{6d1d2b49-cd22-492a-9eef-6cd892ac964b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Other">
+      <UniqueIdentifier>{e774bd0f-d189-4bd5-b365-29d09669fea0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\imgui-1.89.4\imgui.cpp">
@@ -52,6 +55,9 @@
     <ClCompile Include="ImageHelper.cpp">
       <Filter>sources</Filter>
     </ClCompile>
+    <ClCompile Include="lib\ImGuiFileDialog\ImGuiFileDialog.cpp">
+      <Filter>Other</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui-1.89.4\imconfig.h">
@@ -86,6 +92,12 @@
     </ClInclude>
     <ClInclude Include="ImageHelper.h">
       <Filter>sources</Filter>
+    </ClInclude>
+    <ClInclude Include="lib\ImGuiFileDialog\ImGuiFileDialog.h">
+      <Filter>Other</Filter>
+    </ClInclude>
+    <ClInclude Include="lib\ImGuiFileDialog\ImGuiFileDialogConfig.h">
+      <Filter>Other</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

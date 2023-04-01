@@ -17,6 +17,7 @@
 #endif
 
 #include "ImageHelper.h"
+#include "ImGuiFileDialog/ImGuiFileDialog.h"
 
 // This can also compile and run with Emscripten! See 'Makefile.emscripten' for details.
 #ifdef __EMSCRIPTEN__
@@ -219,6 +220,27 @@ int main(int, char**)
                 activate_gamelink = GameLink::IsActive();
             }
 
+            bool ofd = false;
+            if (ImGui::Button("Select File"))
+            {
+                ImGui::Begin("File Dialog", &ofd);
+                ImGuiFileDialog instance_a;
+                instance_a.OpenDialog("ChooseFileDlgKey", "Choose File", ".png", ".");
+				if (instance_a.Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(2000.f, 2000.f), ImVec2(10000.f, 10000.f)))
+				{
+					// action if OK
+					if (instance_a.IsOk())
+					{
+                        std::string asset_name = instance_a.GetFilePathName();
+						std::string filePath = instance_a.GetCurrentPath();
+					}
+
+					// close
+                    instance_a.Close();
+				}
+                ImGui::End();
+            }
+
 			if (!activate_gamelink)
 				ImGui::BeginDisabled();
 
@@ -236,7 +258,21 @@ int main(int, char**)
 
                 DefineImageAssetFilenameCmd asset_cmd;
                 asset_cmd.asset_index = 0;
-                std::string asset_name = "C:/Users/John/source/repos/SuperDuperHelper/SuperDuperHelper/Assets/Tiles_Ultima5.png";
+                std::string asset_name;
+				ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".cpp,.h,.hpp",
+					".", 1, nullptr, ImGuiFileDialogFlags_Modal);
+                if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+				{
+					// action if OK
+					if (ImGuiFileDialog::Instance()->IsOk())
+					{
+						asset_name = ImGuiFileDialog::Instance()->GetFilePathName();
+						std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+					}
+
+					// close
+					ImGuiFileDialog::Instance()->Close();
+				}
                 asset_cmd.filename_length = asset_name.length();
                 asset_cmd.filename = asset_name.c_str();
                 auto assetc = SDHRCommand_DefineImageAssetFilename(&asset_cmd);
