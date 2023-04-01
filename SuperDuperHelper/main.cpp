@@ -222,27 +222,6 @@ int main(int, char**)
                 activate_gamelink = GameLink::IsActive();
             }
 
-            bool ofd = false;
-            if (ImGui::Button("Select File"))
-            {
-                ImGui::Begin("File Dialog", &ofd);
-                ImGuiFileDialog instance_a;
-                instance_a.OpenDialog("ChooseFileDlgKey", "Choose File", ".png", ".");
-				if (instance_a.Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(2000.f, 2000.f), ImVec2(10000.f, 10000.f)))
-				{
-					// action if OK
-					if (instance_a.IsOk())
-					{
-                        std::string asset_name = instance_a.GetFilePathName();
-						std::string filePath = instance_a.GetCurrentPath();
-					}
-
-					// close
-                    instance_a.Close();
-				}
-                ImGui::End();
-            }
-
 			if (!activate_gamelink)
 				ImGui::BeginDisabled();
 
@@ -434,6 +413,24 @@ int main(int, char**)
             ImGui::NewLine();
 
 			ImGui::SeparatorText("Other");
+
+			if (ImGui::Button("Select File"))
+			{
+				ImGuiFileDialog instance_a;
+				instance_a.OpenDialog("ChooseFileDlgKey", "Choose File", ".png", ".");
+				if (instance_a.Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(2000.f, 2000.f), ImVec2(10000.f, 10000.f)))
+				{
+					// action if OK
+					if (instance_a.IsOk())
+					{
+						std::string asset_name = instance_a.GetFilePathName();
+						std::string filePath = instance_a.GetCurrentPath();
+					}
+
+					// close
+					instance_a.Close();
+				}
+			}
 
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 
