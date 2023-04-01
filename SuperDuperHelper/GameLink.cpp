@@ -268,9 +268,27 @@ bool GameLink::IsTrackingOnly()
 
 void GameLink::SendCommand(std::string command)
 {
-	UINT16 sz = (UINT16)command.size() + 1;
-	g_p_shared_memory->buf_tohost.payload = sz;
-	snprintf((char *)g_p_shared_memory->buf_tohost.data, sz, "%s", command.c_str());
+	DWORD dwWaitResult = WaitForSingleObject(g_mutex_handle, 3000);
+	switch (dwWaitResult)
+	{
+	case WAIT_OBJECT_0:
+	{
+		UINT16 sz = (UINT16)command.size() + 1;
+		g_p_shared_memory->buf_tohost.payload = sz;
+		snprintf((char*)g_p_shared_memory->buf_tohost.data, sz, "%s", command.c_str());
+		ReleaseMutex(g_mutex_handle);
+		break;
+	}
+	case WAIT_ABANDONED:
+		ReleaseMutex(g_mutex_handle);
+		[[fallthrough]];
+	case WAIT_TIMEOUT:
+		[[fallthrough]];
+	case WAIT_FAILED:
+		[[fallthrough]];
+	default:
+		break;
+	}
 }
 
 void GameLink::Pause()
@@ -331,17 +349,36 @@ void GameLink::SDHR_write(uint8_t* buf, UINT16 buflength)
 		OutputDebugStringW(L"ERROR: Write buffer is too large, can't prepend the Gamelink command tag!\n");
 		return;
 	}
-	auto ptrdata = (char*)g_p_shared_memory->buf_tohost.data;
-	memcpy(ptrdata, gamelinkCmd.c_str(), gamelinkCmd.length());
-	ptrdata += gamelinkCmd.length();
-	memcpy(ptrdata, buf, buflength);
-	ptrdata += buflength;
-	// final SDHR_CMD_READY command -- size 0x0000, followed by the ID
-	ptrdata[0] = 0;
-	ptrdata[1] = 0;
-	ptrdata[2] = (uint8_t)SDHR_CMD::READY;
-	g_p_shared_memory->buf_tohost.payload = sz;
-	bReadyToProcess = true;
+
+	DWORD dwWaitResult = WaitForSingleObject(g_mutex_handle, 3000);
+	switch (dwWaitResult)
+	{
+	case WAIT_OBJECT_0:
+	{
+		auto ptrdata = (char*)g_p_shared_memory->buf_tohost.data;
+		memcpy(ptrdata, gamelinkCmd.c_str(), gamelinkCmd.length());
+		ptrdata += gamelinkCmd.length();
+		memcpy(ptrdata, buf, buflength);
+		ptrdata += buflength;
+		// final SDHR_CMD_READY command -- size 0x0000, followed by the ID
+		ptrdata[0] = 0;
+		ptrdata[1] = 0;
+		ptrdata[2] = (uint8_t)SDHR_CMD::READY;
+		g_p_shared_memory->buf_tohost.payload = sz;
+		bReadyToProcess = true;
+		ReleaseMutex(g_mutex_handle);
+		break;
+	}
+	case WAIT_ABANDONED:
+		ReleaseMutex(g_mutex_handle);
+		[[fallthrough]];
+	case WAIT_TIMEOUT:
+		[[fallthrough]];
+	case WAIT_FAILED:
+		[[fallthrough]];
+	default:
+		break;
+	}
 }
 
 void GameLink::SDHR_write(const std::vector<uint8_t>& v_data)
@@ -354,17 +391,35 @@ void GameLink::SDHR_write(const std::vector<uint8_t>& v_data)
 		return;
 	}
 
-	auto ptrdata = (char*)g_p_shared_memory->buf_tohost.data;
-	memcpy(ptrdata, gamelinkCmd.c_str(), gamelinkCmd.length());
-	ptrdata += gamelinkCmd.length();
-	std::copy(v_data.begin(), v_data.end(), ptrdata);
-	ptrdata += v_data.size();
-	// final SDHR_CMD_READY command -- size 0x0000, followed by the ID
-	ptrdata[0] = 0;
-	ptrdata[1] = 0;
-	ptrdata[2] = (uint8_t)SDHR_CMD::READY;
-	g_p_shared_memory->buf_tohost.payload = sz;
-	bReadyToProcess = true;
+	DWORD dwWaitResult = WaitForSingleObject(g_mutex_handle, 3000);
+	switch (dwWaitResult)
+	{
+	case WAIT_OBJECT_0:
+	{
+		auto ptrdata = (char*)g_p_shared_memory->buf_tohost.data;
+		memcpy(ptrdata, gamelinkCmd.c_str(), gamelinkCmd.length());
+		ptrdata += gamelinkCmd.length();
+		std::copy(v_data.begin(), v_data.end(), ptrdata);
+		ptrdata += v_data.size();
+		// final SDHR_CMD_READY command -- size 0x0000, followed by the ID
+		ptrdata[0] = 0;
+		ptrdata[1] = 0;
+		ptrdata[2] = (uint8_t)SDHR_CMD::READY;
+		g_p_shared_memory->buf_tohost.payload = sz;
+		bReadyToProcess = true;
+		ReleaseMutex(g_mutex_handle);
+		break;
+	}
+	case WAIT_ABANDONED:
+		ReleaseMutex(g_mutex_handle);
+		[[fallthrough]];
+	case WAIT_TIMEOUT:
+		[[fallthrough]];
+	case WAIT_FAILED:
+		[[fallthrough]];
+	default:
+		break;
+	}
 }
 
 void GameLink::SetSoundVolume(UINT8 main, UINT8 mockingboard)

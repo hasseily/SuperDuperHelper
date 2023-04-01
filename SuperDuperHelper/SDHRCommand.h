@@ -40,6 +40,13 @@ struct UploadDataCmd {
 	uint8_t num_256b_pages;
 };
 
+struct UploadDataFilenameCmd {
+	uint8_t dest_addr_med;
+	uint8_t dest_addr_high;
+	uint8_t filename_length;
+	const char* filename;  // don't include the trailing null either in the data or counted in the filename_length
+};
+
 struct DefineImageAssetCmd {
 	uint8_t asset_index;
 	uint8_t upload_addr_med;
@@ -74,33 +81,44 @@ struct DefineTilesetImmediateCmd {
 
 struct DefineWindowCmd {
 	int8_t window_index;
-	uint16_t screen_xcount;
-	uint16_t screen_ycount;
-	int16_t screen_xbegin;
-	int16_t screen_ybegin;
-	uint16_t tile_xbegin;
-	uint16_t tile_ybegin;
-	uint16_t tile_xdim;
-	uint16_t tile_ydim;
-	uint16_t tile_xcount;
-	uint16_t tile_ycount;
+	bool black_or_wrap;			// false: viewport is black outside of tile range, true: viewport wraps
+	uint64_t screen_xcount;		// width in pixels of visible screen area of window
+	uint64_t screen_ycount;
+	int64_t screen_xbegin;		// pixel xy coordinate where window begins
+	int64_t screen_ybegin;
+	int64_t  tile_xbegin;		// pixel xy coordinate on backing tile array where aperture begins
+	int64_t  tile_ybegin;
+	uint64_t tile_xdim;			// xy dimension, in pixels, of tiles in the window.
+	uint64_t tile_ydim;
+	uint64_t tile_xcount;		// xy dimension, in tiles, of the tile array
+	uint64_t tile_ycount;
 };
 
 struct UpdateWindowSetBothCmd {
 	int8_t window_index;
-	uint16_t tile_xbegin;
-	uint16_t tile_ybegin;
-	uint16_t tile_xcount;
-	uint16_t tile_ycount;
+	int64_t tile_xbegin;
+	int64_t tile_ybegin;
+	uint64_t tile_xcount;
+	uint64_t tile_ycount;
 	uint8_t* data;  // data is 2-byte records per tile, tileset and index
+};
+
+struct UpdateWindowSetUploadCmd {
+	int8_t window_index;
+	int64_t tile_xbegin;
+	int64_t tile_ybegin;
+	uint64_t tile_xcount;
+	uint64_t tile_ycount;
+	uint8_t upload_addr_med;
+	uint8_t upload_addr_high;
 };
 
 struct UpdateWindowSingleTilesetCmd {
 	int8_t window_index;
-	uint16_t tile_xbegin;
-	uint16_t tile_ybegin;
-	uint16_t tile_xcount;
-	uint16_t tile_ycount;
+	int64_t tile_xbegin;
+	int64_t tile_ybegin;
+	uint64_t tile_xcount;
+	uint64_t tile_ycount;
 	uint8_t tileset_index;
 	uint8_t* data;  // data is 1-byte record per tile, index on the given tileset
 };
@@ -113,14 +131,14 @@ struct UpdateWindowShiftTilesCmd {
 
 struct UpdateWindowSetWindowPositionCmd {
 	int8_t window_index;
-	int16_t screen_xbegin;
-	int16_t screen_ybegin;
+	int64_t screen_xbegin;
+	int64_t screen_ybegin;
 };
 
 struct UpdateWindowAdjustWindowViewCmd {
 	int8_t window_index;
-	uint16_t tile_xbegin;
-	uint16_t tile_ybegin;
+	int64_t tile_xbegin;
+	int64_t tile_ybegin;
 };
 
 struct UpdateWindowEnableCmd {
@@ -141,12 +159,20 @@ class SDHRCommand
 public:
 	SDHR_CMD id = SDHR_CMD::NONE;
 	std::vector<uint8_t> v_data;
+protected:
+	void InsertSizeHeader();
 };
 
 class SDHRCommand_UploadData : public SDHRCommand
 {
 public:
 	SDHRCommand_UploadData(UploadDataCmd* cmd);
+};
+
+class SDHRCommand_UploadDataFilename : public SDHRCommand
+{
+public:
+	SDHRCommand_UploadDataFilename(UploadDataFilenameCmd* cmd);
 };
 
 class SDHRCommand_DefineImageAsset : public SDHRCommand
@@ -183,6 +209,12 @@ class SDHRCommand_UpdateWindowSetBoth : public SDHRCommand
 {
 public:
 	SDHRCommand_UpdateWindowSetBoth(UpdateWindowSetBothCmd* cmd);
+};
+
+class SDHRCommand_UpdateWindowSetUpload : public SDHRCommand
+{
+public:
+	SDHRCommand_UpdateWindowSetUpload(UpdateWindowSetUploadCmd* cmd);
 };
 
 class SDHRCommand_UpdateWindowSingleTileset : public SDHRCommand

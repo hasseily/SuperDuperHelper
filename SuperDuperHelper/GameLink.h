@@ -33,7 +33,9 @@ enum class SDHR_CMD {
 	UPDATE_WINDOW_ADJUST_WINDOW_VIEW = 11,
 	UPDATE_WINDOW_SET_BITMASKS = 12,
 	UPDATE_WINDOW_ENABLE = 13,
-	READY = 14
+	READY = 14,
+	UPLOAD_DATA_FILENAME = 15,
+	UPDATE_WINDOW_SET_UPLOAD = 16,
 };
 
 //------------------------------------------------------------------------------

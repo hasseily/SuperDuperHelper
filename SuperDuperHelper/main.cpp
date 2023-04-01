@@ -6,6 +6,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
+#include "misc/cpp/imgui_stdlib.h"
 #include <stdio.h>
 #include <memory>
 #include <SDL.h>
@@ -19,6 +20,8 @@
 #endif
 
 #include "ImageHelper.h"
+#include "ImGuiFileDialog/ImGuiFileDialog.h"
+#include "ini.h"
 
 // This can also compile and run with Emscripten! See 'Makefile.emscripten' for details.
 #ifdef __EMSCRIPTEN__
@@ -114,13 +117,15 @@ int main(int, char**)
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
 
+    // Load INI Config
+    mINI::INIFile file("sdh_config.ini");
+    mINI::INIStructure ini;
+    file.read(ini);
 
     // Load Textures
 	int my_image_width = 0;
 	int my_image_height = 0;
 	GLuint my_image_texture = 0;
-	bool ret = ImageHelper::LoadTextureFromFile("Assets/Tiles_Ultima5.png", &my_image_texture, &my_image_width, &my_image_height);
-	IM_ASSERT(ret);
 
     // Our state
     bool show_demo_window = false;
@@ -128,6 +133,11 @@ int main(int, char**)
 	bool show_tileset_window = true;
 	bool show_gamelink_video_window = true;
     bool is_gamelink_focused = false;
+	ImGuiFileDialog instance_a;
+    std::string asset_name = ini["Assets"]["Dialog1"];
+    {
+		bool ret = ImageHelper::LoadTextureFromFile(asset_name.c_str(), &my_image_texture, &my_image_width, &my_image_height);
+    }
 
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -211,7 +221,7 @@ int main(int, char**)
 
             ImGui::Begin("GameLink Configuration");
 
-            ImGui::Text("Configure GameLink here");               // Display some text (you can use a format strings too)
+            ImGui::SeparatorText("SuperDuper High Resolution Testing");               // Display some text (you can use a format strings too)
             if (ImGui::Checkbox("GameLink Active", &activate_gamelink))
             {
 				if (!GameLink::IsActive() && activate_gamelink)
@@ -231,6 +241,13 @@ int main(int, char**)
                 else
                     GameLink::SDHR_off();
             }
+			ImGui::SeparatorText("SDHD Commands");
+            ImGui::InputText("Asset", &asset_name);
+			ImGui::SameLine();
+			if (ImGui::Button("Select File"))
+			{
+				instance_a.OpenDialog("ChooseFileDlgKey", "Choose File", ".png", "./Assets");
+			}
 
             if (ImGui::Button("Define Structs"))
             {
@@ -245,7 +262,6 @@ int main(int, char**)
 
                 DefineImageAssetFilenameCmd asset_cmd;
                 asset_cmd.asset_index = 0;
-                std::string asset_name = "C:/Users/John/source/repos/SuperDuperHelper/SuperDuperHelper/Assets/Tiles_Ultima5.png";
                 asset_cmd.filename_length = asset_name.length();
                 asset_cmd.filename = asset_name.c_str();
                 auto assetc = SDHRCommand_DefineImageAssetFilename(&asset_cmd);
@@ -282,6 +298,7 @@ int main(int, char**)
 
                 DefineWindowCmd w;
                 w.window_index = 0;
+                w.black_or_wrap = false;
                 w.screen_xcount = 640;
                 w.screen_ycount = 352;
                 w.screen_xbegin = 0;
@@ -412,6 +429,23 @@ int main(int, char**)
 
 			ImGui::SeparatorText("Other");
 
+			if (instance_a.Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(200,200), ImVec2(2000,2000)))
+			{
+				// action if OK
+				if (instance_a.IsOk())
+				{
+					asset_name = instance_a.GetFilePathName();
+					std::string filePath = instance_a.GetCurrentPath();
+					bool ret = ImageHelper::LoadTextureFromFile(asset_name.c_str(), &my_image_texture, &my_image_width, &my_image_height);
+                    ini["Assets"]["Dialog1"] = asset_name;
+                    file.write(ini);
+                    show_tileset_window = true;
+				}
+
+				// close
+				instance_a.Close();
+			}
+
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 
 
@@ -439,7 +473,7 @@ int main(int, char**)
 		{
             ImVec2 vpos = ImVec2(300.f, 100.f);
             ImGui::SetNextWindowPos(vpos, ImGuiCond_FirstUseEver);
-			ImGui::Begin("Ultima V (Amiga) Tileset", &show_tileset_window);
+			ImGui::Begin("Loaded PNG Asset", &show_tileset_window);
 			ImGui::Text("pointer = %p", my_image_texture);
 			ImGui::Text("size = %d x %d", my_image_width, my_image_height);
 			ImGui::Image((void*)(intptr_t)my_image_texture, ImVec2(my_image_width, my_image_height));
