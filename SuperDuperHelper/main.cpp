@@ -10,6 +10,8 @@
 #include <memory>
 #include <SDL.h>
 #include "font8x8.h"
+#include "brittania_tiles.h"
+#include <fstream>
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <SDL_opengles2.h>
 #else
@@ -232,6 +234,13 @@ int main(int, char**)
 
             if (ImGui::Button("Define Structs"))
             {
+                // hacky code used to create data file for britannia map
+                //std::ofstream f("britannia.dat", std::ios::out | std::ios::binary | std::ios::trunc);
+                //for (auto i = 0; i < sizeof(britannia_tiles); ++i) {
+                //    f.put(0);
+                //    f.put(britannia_tiles[i]);
+                //}
+                //f.close();
                 auto batcher = SDHRCommandBatcher();
 
                 DefineImageAssetFilenameCmd asset_cmd;
