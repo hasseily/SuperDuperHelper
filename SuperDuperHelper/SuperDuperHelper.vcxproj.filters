@@ -99,6 +99,9 @@
     <ClInclude Include="ImGuiFileDialog\ImGuiFileDialogConfig.h">
       <Filter>Other</Filter>
     </ClInclude>
+    <ClInclude Include="brittania_tiles.h">
+      <Filter>sources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\imgui-1.89.4\misc\debuggers\imgui.natvis">
