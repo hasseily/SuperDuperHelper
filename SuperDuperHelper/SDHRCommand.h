@@ -40,6 +40,13 @@ struct UploadDataCmd {
 	uint8_t num_256b_pages;
 };
 
+struct UploadDataFilenameCmd {
+	uint8_t dest_addr_med;
+	uint8_t dest_addr_high;
+	uint8_t filename_length;
+	const char* filename;  // don't include the trailing null either in the data or counted in the filename_length
+};
+
 struct DefineImageAssetCmd {
 	uint8_t asset_index;
 	uint8_t upload_addr_med;
@@ -93,6 +100,16 @@ struct UpdateWindowSetBothCmd {
 	uint16_t tile_xcount;
 	uint16_t tile_ycount;
 	uint8_t* data;  // data is 2-byte records per tile, tileset and index
+};
+
+struct UpdateWindowSetUploadCmd {
+	int8_t window_index;
+	uint16_t tile_xbegin;
+	uint16_t tile_ybegin;
+	uint16_t tile_xcount;
+	uint16_t tile_ycount;
+	uint8_t upload_addr_med;
+	uint8_t upload_addr_high;
 };
 
 struct UpdateWindowSingleTilesetCmd {
@@ -151,6 +168,12 @@ public:
 	SDHRCommand_UploadData(UploadDataCmd* cmd);
 };
 
+class SDHRCommand_UploadDataFilename : public SDHRCommand
+{
+public:
+	SDHRCommand_UploadDataFilename(UploadDataFilenameCmd* cmd);
+};
+
 class SDHRCommand_DefineImageAsset : public SDHRCommand
 {
 public:
@@ -185,6 +208,12 @@ class SDHRCommand_UpdateWindowSetBoth : public SDHRCommand
 {
 public:
 	SDHRCommand_UpdateWindowSetBoth(UpdateWindowSetBothCmd* cmd);
+};
+
+class SDHRCommand_UpdateWindowSetUpload : public SDHRCommand
+{
+public:
+	SDHRCommand_UpdateWindowSetUpload(UpdateWindowSetUploadCmd* cmd);
 };
 
 class SDHRCommand_UpdateWindowSingleTileset : public SDHRCommand

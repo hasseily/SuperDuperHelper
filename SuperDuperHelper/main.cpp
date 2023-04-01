@@ -267,21 +267,7 @@ int main(int, char**)
 
                 DefineImageAssetFilenameCmd asset_cmd;
                 asset_cmd.asset_index = 0;
-                std::string asset_name;
-				ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".cpp,.h,.hpp",
-					".", 1, nullptr, ImGuiFileDialogFlags_Modal);
-                if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
-				{
-					// action if OK
-					if (ImGuiFileDialog::Instance()->IsOk())
-					{
-						asset_name = ImGuiFileDialog::Instance()->GetFilePathName();
-						std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-					}
-
-					// close
-					ImGuiFileDialog::Instance()->Close();
-				}
+                std::string asset_name = "D:/Repos/SuperDuperHelper/SuperDuperHelper/Assets/Tiles_Ultima5.png";
                 asset_cmd.filename_length = asset_name.length();
                 asset_cmd.filename = asset_name.c_str();
                 auto assetc = SDHRCommand_DefineImageAssetFilename(&asset_cmd);

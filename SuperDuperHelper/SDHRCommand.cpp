@@ -82,6 +82,15 @@ SDHRCommand_UpdateWindowSetBoth::SDHRCommand_UpdateWindowSetBoth(UpdateWindowSet
 	InsertSizeHeader();
 }
 
+SDHRCommand_UpdateWindowSetUpload::SDHRCommand_UpdateWindowSetUpload(UpdateWindowSetUploadCmd* cmd)
+{
+	id = SDHR_CMD::UPDATE_WINDOW_SET_UPLOAD;
+	v_data.push_back((uint8_t)id);
+	uint8_t* p = (uint8_t*)cmd;
+	for (size_t i = 0; i < sizeof(UpdateWindowSetUploadCmd); i++) { v_data.push_back(p[i]); };
+	InsertSizeHeader();
+}
+
 SDHRCommand_UpdateWindowSetWindowPosition::SDHRCommand_UpdateWindowSetWindowPosition(UpdateWindowSetWindowPositionCmd* cmd) {
 	id = SDHR_CMD::UPDATE_WINDOW_SET_WINDOW_POSITION;
 	v_data.push_back((uint8_t)id);
@@ -96,6 +105,18 @@ SDHRCommand_UploadData::SDHRCommand_UploadData(UploadDataCmd* cmd)
 	v_data.push_back((uint8_t)id);
 	uint8_t* p = (uint8_t*)cmd;
 	for (size_t i = 0; i < sizeof(UploadDataCmd); i++) { v_data.push_back(p[i]); };
+	InsertSizeHeader();
+}
+
+SDHRCommand_UploadDataFilename::SDHRCommand_UploadDataFilename(UploadDataFilenameCmd* cmd)
+{
+	id = SDHR_CMD::UPLOAD_DATA_FILENAME;
+	v_data.push_back((uint8_t)id);
+	v_data.push_back(cmd->dest_addr_med);
+	v_data.push_back(cmd->dest_addr_high);
+	v_data.push_back(cmd->filename_length);
+	// push the filename string (no trailing null)
+	for (size_t i = 0; i < cmd->filename_length; i++) { v_data.push_back(cmd->filename[i]); };
 	InsertSizeHeader();
 }
 
