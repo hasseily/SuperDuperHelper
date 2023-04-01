@@ -135,6 +135,7 @@ int main(int, char**)
     // GameLink State
     bool activate_gamelink = false;
 	bool activate_sdhr = false;
+	ImGuiFileDialog instance_a;
 
     uint16_t sprite_posx = 0;
     uint16_t sprite_posy = 0;
@@ -416,20 +417,20 @@ int main(int, char**)
 
 			if (ImGui::Button("Select File"))
 			{
-				ImGuiFileDialog instance_a;
 				instance_a.OpenDialog("ChooseFileDlgKey", "Choose File", ".png", ".");
-				if (instance_a.Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(2000.f, 2000.f), ImVec2(10000.f, 10000.f)))
-				{
-					// action if OK
-					if (instance_a.IsOk())
-					{
-						std::string asset_name = instance_a.GetFilePathName();
-						std::string filePath = instance_a.GetCurrentPath();
-					}
+			}
 
-					// close
-					instance_a.Close();
+			if (instance_a.Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(200,200), ImVec2(2000,2000)))
+			{
+				// action if OK
+				if (instance_a.IsOk())
+				{
+					std::string asset_name = instance_a.GetFilePathName();
+					std::string filePath = instance_a.GetCurrentPath();
 				}
+
+				// close
+				instance_a.Close();
 			}
 
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
