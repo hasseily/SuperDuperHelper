@@ -304,6 +304,7 @@ int main(int, char**)
 
                 DefineWindowCmd w;
                 w.window_index = 0;
+                w.black_or_wrap = false;
                 w.screen_xcount = 640;
                 w.screen_ycount = 352;
                 w.screen_xbegin = 0;

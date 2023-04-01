@@ -31,11 +31,12 @@ void SDHRCommandBatcher::AddCommand(SDHRCommand* command)
 
 void SDHRCommand::InsertSizeHeader()
 {
-	uint16_t vSize = v_data.size() - 1;
-	uint8_t* p;
-	p = (uint8_t*)&vSize;
-	v_data.insert(v_data.begin(), p[1]);
-	v_data.insert(v_data.begin(), p[0]);
+	// OBSOLETE
+// 	uint16_t vSize = v_data.size() - 1;
+// 	uint8_t* p;
+// 	p = (uint8_t*)&vSize;
+// 	v_data.insert(v_data.begin(), p[1]);
+// 	v_data.insert(v_data.begin(), p[0]);
 }
 
 SDHRCommand_UpdateWindowEnable::SDHRCommand_UpdateWindowEnable(UpdateWindowEnableCmd* cmd)
@@ -56,7 +57,8 @@ SDHRCommand_DefineTilesetImmediate::SDHRCommand_DefineTilesetImmediate(DefineTil
 	for (size_t i = 0; i < (sizeof(DefineTilesetImmediateCmd) - sizeof(uint8_t*)); i++) { v_data.push_back(p[i]); };
 	// push the data field
 	p = cmd->data;
-	for (size_t i = 0; i <  cmd->xdim * cmd->ydim * cmd->num_entries / sizeof(uint8_t); i++) { v_data.push_back(p[i]); };
+	size_t entries = (cmd->num_entries == 0) ? 256 : cmd->num_entries;
+	for (size_t i = 0; i < (size_t)4 * entries; i++) { v_data.push_back(p[i]); };
 	InsertSizeHeader();
 }
 
