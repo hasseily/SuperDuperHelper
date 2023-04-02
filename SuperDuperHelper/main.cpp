@@ -600,15 +600,15 @@ int main(int, char**)
 			{
                 ImGui::Text(data_filename.c_str());
 				ImGui::SameLine();
-                if (ImGui::Button("Select File"))
+                if (ImGui::Button("Select File###"))
                 {
                     dialog_data.OpenDialog("ChooseAssetDlgKey", "Select File", ".*", "./Assets", -1, nullptr,
                         ImGuiFileDialogFlags_NoDialog |
                         ImGuiFileDialogFlags_DisableCreateDirectoryButton |
                         ImGuiFileDialogFlags_ReadOnlyFileNameField);
                 }
-                ImGui::SliderInt("Med Byte", &data_dest_addr_med, 0, 255);
-				ImGui::SliderInt("High Byte", &data_dest_addr_high, 0, 255);
+                ImGui::SliderInt("Med Byte###", &data_dest_addr_med, 0, 255);
+				ImGui::SliderInt("High Byte###", &data_dest_addr_high, 0, 255);
 				if (dialog_data.Display("ChooseAssetDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(0, 0), ImVec2(0, 250)))
 				{
 					// action if OK
@@ -640,7 +640,7 @@ int main(int, char**)
 			{
 				ImGui::Text(image0_filename.c_str());
 				ImGui::SameLine();
-				if (ImGui::Button("Select File"))
+				if (ImGui::Button("Select File###"))
 				{
 					dialog_data.OpenDialog("ChooseImage0DlgKey", "Select File", ".*", "./Assets", -1, nullptr,
 						ImGuiFileDialogFlags_NoDialog |
@@ -677,7 +677,7 @@ int main(int, char**)
 			{
 				ImGui::Text(image1_filename.c_str());
 				ImGui::SameLine();
-				if (ImGui::Button("Select File"))
+				if (ImGui::Button("Select File###"))
 				{
 					dialog_data.OpenDialog("ChooseImage1DlgKey", "Select File", ".*", "./Assets", -1, nullptr,
 						ImGuiFileDialogFlags_NoDialog |
@@ -713,9 +713,9 @@ int main(int, char**)
 			{
                 if (tileset0_num_entries == 0)
                     tileset0_num_entries = 256;
-				ImGui::SliderInt("Asset Index", &tileset0_index, 0, 1);
+				ImGui::SliderInt("Asset Index##t0", &tileset0_index, 0, 1);
                 int isq = std::round(sqrt(tileset0_num_entries));
-				if (ImGui::SliderInt("Number of Entries", &tileset0_num_entries, 1, 256))
+				if (ImGui::SliderInt("Number of Entries##t0", &tileset0_num_entries, 1, 256))
 				{
 					// Check it's a square
 					isq = std::round(sqrt(tileset0_num_entries));
@@ -756,9 +756,9 @@ int main(int, char**)
 			{
 				if (tileset1_num_entries == 0)
 					tileset1_num_entries = 256;
-				ImGui::SliderInt("Asset Index", &tileset1_index, 0, 1);
+				ImGui::SliderInt("Asset Index##t1", &tileset1_index, 0, 1);
 				int isq = std::round(sqrt(tileset1_num_entries));
-                if (ImGui::SliderInt("Number of Entries", &tileset1_num_entries, 1, 256))
+                if (ImGui::SliderInt("Number of Entries##t1", &tileset1_num_entries, 1, 256))
                 {
                     // Check it's a square
 					isq = std::round(sqrt(tileset1_num_entries));
@@ -799,18 +799,18 @@ int main(int, char**)
 			{
                 // TODO: Enable/Disable window with a button
                 ImGui::SeparatorText("Define Window");
-				ImGui::Checkbox("Wrap", &window0_black_or_wrap);
+				ImGui::Checkbox("Wrap##w0", &window0_black_or_wrap);
                 ImGui::PushItemWidth(80.f);
 				ImGui::Text("Screen Pixels:");  ImGui::SameLine(130);
-				ImGui::InputInt(" ", &window0_screen_xcount); ImGui::SameLine(240); ImGui::InputInt(" px", &window0_screen_ycount);
+				ImGui::InputInt(" ##0w0", &window0_screen_xcount); ImGui::SameLine(240); ImGui::InputInt(" px##0w0", &window0_screen_ycount);
                 ImGui::Text("Screen Begin:");  ImGui::SameLine(130);
-				ImGui::InputInt(" ", &window0_screen_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px", &window0_screen_ybegin);
+				ImGui::InputInt(" ##1w0", &window0_screen_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px##1w0", &window0_screen_ybegin);
 				ImGui::Text("Tile Begin:");  ImGui::SameLine(130);
-				ImGui::InputInt(" ", &window0_tile_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px", &window0_tile_ybegin);
+				ImGui::InputInt(" ##2w0", &window0_tile_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px##2w0", &window0_tile_ybegin);
 				ImGui::Text("Tile Dimensions:");  ImGui::SameLine(130);
-				ImGui::InputInt(" ", &window0_tile_xdim); ImGui::SameLine(240); ImGui::InputInt(" px", &window0_tile_ydim);
+				ImGui::InputInt(" ##3w0", &window0_tile_xdim); ImGui::SameLine(240); ImGui::InputInt(" px##3w0", &window0_tile_ydim);
 				ImGui::Text("Tile Count:");  ImGui::SameLine(130);
-				ImGui::InputInt(" ", &window0_tile_xcount); ImGui::SameLine(240); ImGui::InputInt(" tiles", &window0_tile_ycount);
+				ImGui::InputInt(" ##4w0", &window0_tile_xcount); ImGui::SameLine(240); ImGui::InputInt(" tiles##4w0", &window0_tile_ycount);
 				ImGui::PopItemWidth();
 				if (ImGui::Button("Define Window 0"))
 				{
@@ -860,17 +860,17 @@ int main(int, char**)
 				ImGui::Checkbox("Wrap", &window1_black_or_wrap);
 				ImGui::PushItemWidth(80.f);
 				ImGui::Text("Screen Pixels:");  ImGui::SameLine(130);
-				ImGui::InputInt(" ", &window1_screen_xcount); ImGui::SameLine(240); ImGui::InputInt(" px", &window1_screen_ycount);
+				ImGui::InputInt(" ##0w1", &window1_screen_xcount); ImGui::SameLine(240); ImGui::InputInt(" px##0w1", &window1_screen_ycount);
 				ImGui::Text("Screen Begin:");  ImGui::SameLine(130);
-				ImGui::InputInt(" ", &window1_screen_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px", &window1_screen_ybegin);
+				ImGui::InputInt(" ##1w1", &window1_screen_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px##1w1", &window1_screen_ybegin);
 				ImGui::Text("Tile Begin:");  ImGui::SameLine(130);
-				ImGui::InputInt(" ", &window1_tile_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px", &window1_tile_ybegin);
+				ImGui::InputInt(" ##2w1", &window1_tile_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px##2w1", &window1_tile_ybegin);
 				ImGui::Text("Tile Dimensions:");  ImGui::SameLine(130);
-				ImGui::InputInt(" ", &window1_tile_xdim); ImGui::SameLine(240); ImGui::InputInt(" px", &window1_tile_ydim);
+				ImGui::InputInt(" ##3w1", &window1_tile_xdim); ImGui::SameLine(240); ImGui::InputInt(" px##3w1", &window1_tile_ydim);
 				ImGui::Text("Tile Count:");  ImGui::SameLine(130);
-				ImGui::InputInt(" ", &window1_tile_xcount); ImGui::SameLine(240); ImGui::InputInt(" tiles", &window1_tile_ycount);
+				ImGui::InputInt(" ##4w1", &window1_tile_xcount); ImGui::SameLine(240); ImGui::InputInt(" tiles##4w1", &window1_tile_ycount);
 				ImGui::PopItemWidth();
-				if (ImGui::Button("Define Window 0"))
+				if (ImGui::Button("Define Window 1"))
 				{
 					ini["Window"]["Window1_index"] = window1_index;
 					ini["Window"]["Window1_black_or_wrap"] = window1_black_or_wrap;
@@ -913,18 +913,18 @@ int main(int, char**)
 			ImGui::SeparatorText("Window Commands - Applied on a window index");
 			static int _vWindowIndex = 0;
 			ImGui::PushItemWidth(80.f);
-			ImGui::InputInt("Window Index", &_vWindowIndex);
+			ImGui::InputInt("Window Index##wi", &_vWindowIndex);
 			ImGui::PopItemWidth();
 			if (ImGui::CollapsingHeader("Update Window: Enable"))
 			{
 
 				int _bState = 0;
-				if (ImGui::Button("Enable Window"))
+				if (ImGui::Button("Enable Window##wi0"))
 				{
 					_bState = 2;
 				}
 				ImGui::SameLine();
-				if (ImGui::Button("Disable Window"))
+				if (ImGui::Button("Disable Window##wi1"))
 				{
 					_bState = 1;
 
@@ -950,19 +950,21 @@ int main(int, char**)
 				static int _uwsu_addr_high;
 				ImGui::PushItemWidth(80.f);
 				ImGui::Text("Tile Begin:");  ImGui::SameLine(130);
-				ImGui::InputInt(" ", &_uwsu_tile_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px", &window0_tile_ybegin);
+				ImGui::InputInt(" ##0uwsu", &_uwsu_tile_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px##0uwsu", &_uwsu_tile_ybegin);
 				ImGui::Text("Tile Count:");  ImGui::SameLine(130);
-				ImGui::InputInt(" ", &_uwsu_tile_xcount); ImGui::SameLine(240); ImGui::InputInt(" tiles", &_uwsu_tile_ycount);
+				ImGui::InputInt(" ##1uwsu", &_uwsu_tile_xcount); ImGui::SameLine(240); ImGui::InputInt(" tiles##1uwsu", &_uwsu_tile_ycount);
 				ImGui::PopItemWidth();
-				ImGui::SliderInt("Med Byte", &_uwsu_addr_med, 0, 255);
-				ImGui::SliderInt("High Byte", &_uwsu_addr_high, 0, 255);
-				if (ImGui::Button("Update"))
+				ImGui::SliderInt("Med Byte##uwsu", &_uwsu_addr_med, 0, 255);
+				ImGui::SliderInt("High Byte##uwsu", &_uwsu_addr_high, 0, 255);
+				if (ImGui::Button("Update##uwsu"))
 				{
 					auto batcher = SDHRCommandBatcher();
 					UpdateWindowSetUploadCmd _wcmd;
 					_wcmd.window_index = _vWindowIndex;
 					_wcmd.tile_xbegin = _uwsu_tile_xbegin;
 					_wcmd.tile_ybegin = _uwsu_tile_ybegin;
+					_wcmd.tile_xcount = _uwsu_tile_xcount;
+					_wcmd.tile_ycount = _uwsu_tile_ycount;
 					_wcmd.upload_addr_med = _uwsu_addr_med;
 					_wcmd.upload_addr_high = _uwsu_addr_high;
 					auto w_enable_cmd = SDHRCommand_UpdateWindowSetUpload(&_wcmd);
@@ -972,7 +974,40 @@ int main(int, char**)
 			}
 			if (ImGui::CollapsingHeader("Update Window: Single Tileset"))
 			{
-
+				static int _uwst_tile_xbegin;
+				static int _uwst_tile_ybegin;
+				static int _uwst_tile_xcount;
+				static int _uwst_tile_ycount;
+				static int _uwst_tileset_index;
+				static int _uwst_data[4] = { 0, 0, 0, 0 };
+				ImGui::PushItemWidth(80.f);
+				ImGui::SliderInt("Tileset Index##uwst", &_uwst_tileset_index, 0, 1);
+				ImGui::Text("Tile Begin:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ##0uwst", &_uwst_tile_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px##0uwst", &_uwst_tile_ybegin);
+				ImGui::Text("Tile Count:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ##1uwst", &_uwst_tile_xcount); ImGui::SameLine(240); ImGui::InputInt(" tiles##1uwst", &_uwst_tile_ycount);
+				ImGui::PopItemWidth();
+				ImGui::InputInt4("Data##uwst", _uwst_data);
+				if (ImGui::Button("Update##uwst"))
+				{
+					auto batcher = SDHRCommandBatcher();
+					UpdateWindowSingleTilesetCmd _wcmd;
+					_wcmd.window_index = _vWindowIndex;
+					_wcmd.tile_xbegin = _uwst_tile_xbegin;
+					_wcmd.tile_ybegin = _uwst_tile_ybegin;
+					_wcmd.tile_xcount = _uwst_tile_xcount;
+					_wcmd.tile_ycount = _uwst_tile_ycount;
+					_wcmd.tileset_index = _uwst_tileset_index;
+					uint8_t _uwst_data2[4];
+					for (size_t i = 0; i < 4; i++)
+					{
+						_uwst_data2[i] = (uint8_t)_uwst_data[i];
+					}
+					_wcmd.data = _uwst_data2;
+					auto w_enable_cmd = SDHRCommand_UpdateWindowSingleTileset(&_wcmd);
+					batcher.AddCommand(&w_enable_cmd);
+					batcher.Publish();
+				}
 			}
 			if (ImGui::CollapsingHeader("Update Window: Set Both"))
 			{
