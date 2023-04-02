@@ -851,11 +851,6 @@ int main(int, char**)
 					batcher.AddCommand(&w_enable_cmd);
 					batcher.Publish();
 				}
-
-				ImGui::SeparatorText("Set Single Tileset");
-				ImGui::SeparatorText("Shift Tiles");
-				ImGui::SeparatorText("Set Window Position");
-				ImGui::SeparatorText("Adjust Window View");
 			}
 			if (ImGui::CollapsingHeader("Window 1"))
 			{
@@ -914,10 +909,59 @@ int main(int, char**)
 					batcher.AddCommand(&w_enable_cmd);
 					batcher.Publish();
 				}
-				ImGui::SeparatorText("Set Single Tileset");
-				ImGui::SeparatorText("Shift Tiles");
-				ImGui::SeparatorText("Set Window Position");
-				ImGui::SeparatorText("Adjust Window View");
+			}
+			if (ImGui::CollapsingHeader("Update Window: Enable"))
+			{
+				static int _vWindowIndex = 0;
+				int _bState = 0;
+				ImGui::PushItemWidth(80.f);
+				ImGui::InputInt("Window Index", &_vWindowIndex);
+				ImGui::PopItemWidth();
+				ImGui::SameLine(200);
+				if (ImGui::Button("Enable Window"))
+				{
+					_bState = 2;
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Disable Window"))
+				{
+					_bState = 1;
+
+				}
+				if (_bState > 0)
+				{
+					auto batcher = SDHRCommandBatcher();
+					UpdateWindowEnableCmd w_enable;
+					w_enable.window_index = _vWindowIndex;
+					w_enable.enabled = _bState - 1;
+					auto w_enable_cmd = SDHRCommand_UpdateWindowEnable(&w_enable);
+					batcher.AddCommand(&w_enable_cmd);
+					batcher.Publish();
+				}
+			}
+			if (ImGui::CollapsingHeader("Update Window: Set Both"))
+			{
+
+			}
+			if (ImGui::CollapsingHeader("Update Window: Set Upload"))
+			{
+
+			}
+			if (ImGui::CollapsingHeader("Update Window: Single Tileset"))
+			{
+
+			}
+			if (ImGui::CollapsingHeader("Update Window: Shift Tiles"))
+			{
+
+			}
+			if (ImGui::CollapsingHeader("Update Window: Set Window Position"))
+			{
+
+			}
+			if (ImGui::CollapsingHeader("Update Window: Adjust Window View"))
+			{
+
 			}
             ImGui::End();
         }
