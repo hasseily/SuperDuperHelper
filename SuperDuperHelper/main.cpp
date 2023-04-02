@@ -129,15 +129,61 @@ int main(int, char**)
 
     // Our state
     bool show_demo_window = false;
-    bool show_another_window = false;
+    bool show_commands_window = false;
 	bool show_tileset_window = true;
 	bool show_gamelink_video_window = true;
     bool is_gamelink_focused = false;
 	ImGuiFileDialog instance_a;
-    std::string asset_name = ini["Assets"]["Dialog1"];
+	ImGuiFileDialog dialog_data;
+	ImGuiFileDialog dialog_image0;
+	ImGuiFileDialog dialog_image1;
+
+    std::string asset_name = ini["Assets"]["Dialog1"];  // TODO: Remove
     {
 		bool ret = ImageHelper::LoadTextureFromFile(asset_name.c_str(), &my_image_texture, &my_image_width, &my_image_height);
     }
+
+    std::string data_filename = ini["Data"]["Data_filename"];
+	int data_dest_addr_med = 0;
+	int data_dest_addr_high = 0;
+	std::string image0_filename = ini["Image"]["Image0_filename"];
+    int image0_asset_index = 0;
+	std::string image1_filename = ini["Image"]["Image1_filename"];
+    int image1_asset_index = 1;
+	int tileset0_index = 0;
+    int tileset0_asset_index = 0;
+	int tileset0_num_entries = 256;
+	int tileset0_xdim = 16;
+    int tileset0_ydim = 16;
+	int tileset1_index = 1;
+	int tileset1_asset_index = 0;
+	int tileset1_num_entries = 256;
+	int tileset1_xdim = 16;
+	int tileset1_ydim = 16;
+    try
+    {
+		data_dest_addr_med = std::stoi(ini["Data"]["Data_dest_addr_med"]);
+		data_dest_addr_high = std::stoi(ini["Data"]["Data_dest_addr_high"]);
+        image0_asset_index = std::stoi(ini["Image"]["Image0_asset_index"]);
+		image1_asset_index = std::stoi(ini["Image"]["Image1_asset_index"]);
+        tileset0_index = std::stoi(ini["Tileset"]["Tileset0_index"]);
+        tileset0_asset_index = std::stoi(ini["Tileset"]["Tileset0_asset_index"]);
+        tileset0_num_entries = std::stoi(ini["Tileset"]["Tileset0_num_entries"]);
+        tileset0_xdim = std::stoi(ini["Tileset"]["Tileset0_xdim"]);
+        tileset0_ydim = std::stoi(ini["Tileset"]["Tileset0_ydim"]);
+		tileset1_index = std::stoi(ini["Tileset"]["Tileset1_index"]);
+		tileset1_asset_index = std::stoi(ini["Tileset"]["Tileset1_asset_index"]);
+		tileset1_num_entries = std::stoi(ini["Tileset"]["Tileset1_num_entries"]);
+		tileset1_xdim = std::stoi(ini["Tileset"]["Tileset1_xdim"]);
+		tileset1_ydim = std::stoi(ini["Tileset"]["Tileset1_ydim"]);
+    }
+    catch (const std::exception& e)
+    {
+    	
+    }
+
+
+
 
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -237,9 +283,15 @@ int main(int, char**)
             if (ImGui::Checkbox("Enable SuperDuperHiRes (SDHR)", &activate_sdhr))
             {
                 if (activate_sdhr)
+                {
                     GameLink::SDHR_on();
+                    show_commands_window = true;
+                }
                 else
+                {
                     GameLink::SDHR_off();
+					show_commands_window = false;
+                }
             }
 			ImGui::SeparatorText("SDHD Commands");
             ImGui::InputText("Asset", &asset_name);
@@ -458,13 +510,234 @@ int main(int, char**)
             ImGui::End();
         }
 
-        // 3. Show another simple window.
-        if (show_another_window)
+        // 3. Show the commands window
+        if (show_commands_window)
         {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
+			ImVec2 vsize = ImVec2(300.f, 200.f);
+            ImGui::SetNextWindowSize(vsize, ImGuiCond_FirstUseEver);
+            ImGui::Begin("Commands Window", &show_commands_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+			if (ImGui::CollapsingHeader("Data Upload"))
+			{
+                ImGui::Text(data_filename.c_str());
+				ImGui::SameLine();
+                if (ImGui::Button("Select File"))
+                {
+                    dialog_data.OpenDialog("ChooseAssetDlgKey", "Select File", ".*", "./Assets", -1, nullptr,
+                        ImGuiFileDialogFlags_NoDialog |
+                        ImGuiFileDialogFlags_DisableCreateDirectoryButton |
+                        ImGuiFileDialogFlags_ReadOnlyFileNameField);
+                }
+                ImGui::SliderInt("Med Byte", &data_dest_addr_med, 0, 255);
+				ImGui::SliderInt("High Byte", &data_dest_addr_high, 0, 255);
+				if (dialog_data.Display("ChooseAssetDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(0, 0), ImVec2(0, 250)))
+				{
+					// action if OK
+					if (dialog_data.IsOk())
+					{
+                        data_filename = dialog_data.GetFilePathName();
+					}
+					// close
+                    dialog_data.Close();
+				}
+				if (ImGui::Button("Process Data Upload"))
+				{
+					ini["Data"]["Data_dest_addr_med"] = data_dest_addr_med;
+					ini["Data"]["Data_dest_addr_high"] = data_dest_addr_high;
+					ini["Data"]["Data_filename"] = data_filename;
+					file.write(ini);
+					auto batcher = SDHRCommandBatcher();
+                    UploadDataFilenameCmd _udc;
+                    _udc.dest_addr_med = (uint8_t)data_dest_addr_med;
+					_udc.dest_addr_high = (uint8_t)data_dest_addr_high;
+                    _udc.filename_length = (uint8_t)data_filename.length();
+                    _udc.filename = data_filename.c_str();
+					auto _cmd = SDHRCommand_UploadDataFilename(&_udc);
+					batcher.AddCommand(&_cmd);
+					batcher.Publish();
+					GameLink::SDHR_process();
+				}
+			}
+			if (ImGui::CollapsingHeader("Image Asset 0"))
+			{
+				ImGui::Text(image0_filename.c_str());
+				ImGui::SameLine();
+				if (ImGui::Button("Select File"))
+				{
+					dialog_data.OpenDialog("ChooseImage0DlgKey", "Select File", ".*", "./Assets", -1, nullptr,
+						ImGuiFileDialogFlags_NoDialog |
+						ImGuiFileDialogFlags_DisableCreateDirectoryButton |
+						ImGuiFileDialogFlags_ReadOnlyFileNameField);
+				}
+				if (dialog_data.Display("ChooseImage0DlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(0, 0), ImVec2(0, 250)))
+				{
+					// action if OK
+					if (dialog_data.IsOk())
+					{
+						image0_filename = dialog_data.GetFilePathName();
+					}
+					// close
+					dialog_data.Close();
+				}
+				if (ImGui::Button("Process Image 0"))
+				{
+					ini["Image"]["Image0_asset_index"] = image0_asset_index;
+					ini["Image"]["Image0_filename"] = image0_filename;
+					file.write(ini);
+					auto batcher = SDHRCommandBatcher();
+					DefineImageAssetFilenameCmd _udc;
+					_udc.asset_index = (uint8_t)image0_asset_index;
+					_udc.filename_length = (uint8_t)image0_filename.length();
+					_udc.filename = image0_filename.c_str();
+					auto _cmd = SDHRCommand_DefineImageAssetFilename(&_udc);
+					batcher.AddCommand(&_cmd);
+					batcher.Publish();
+					GameLink::SDHR_process();
+				}
+			}
+			if (ImGui::CollapsingHeader("Image Asset 1"))
+
+			{
+				ImGui::Text(image1_filename.c_str());
+				ImGui::SameLine();
+				if (ImGui::Button("Select File"))
+				{
+					dialog_data.OpenDialog("ChooseImage1DlgKey", "Select File", ".*", "./Assets", -1, nullptr,
+						ImGuiFileDialogFlags_NoDialog |
+						ImGuiFileDialogFlags_DisableCreateDirectoryButton |
+						ImGuiFileDialogFlags_ReadOnlyFileNameField);
+				}
+				if (dialog_data.Display("ChooseImage1DlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(0, 0), ImVec2(0, 250)))
+				{
+					// action if OK
+					if (dialog_data.IsOk())
+					{
+						image1_filename = dialog_data.GetFilePathName();
+					}
+					// close
+					dialog_data.Close();
+				}
+				if (ImGui::Button("Process Image 1"))
+				{
+					ini["Image"]["Image1_asset_index"] = image1_asset_index;
+					ini["Image"]["Image1_filename"] = image1_filename;
+					file.write(ini);
+					auto batcher = SDHRCommandBatcher();
+					DefineImageAssetFilenameCmd _udc;
+					_udc.asset_index = (uint8_t)image0_asset_index;
+					_udc.filename_length = (uint8_t)image1_filename.length();
+					_udc.filename = image1_filename.c_str();
+					auto _cmd = SDHRCommand_DefineImageAssetFilename(&_udc);
+					batcher.AddCommand(&_cmd);
+					batcher.Publish();
+					GameLink::SDHR_process();
+				}
+			}
+			if (ImGui::CollapsingHeader("Tileset 0"))
+			{
+                if (tileset0_num_entries == 0)
+                    tileset0_num_entries = 256;
+				ImGui::SliderInt("Asset Index", &tileset0_index, 0, 1);
+				if (ImGui::SliderInt("Number of Entries", &tileset0_num_entries, 1, 256))
+				{
+					// Check it's a square
+					float sq = sqrt(tileset0_num_entries);
+					int isq = std::round(sq);
+					if (isq * isq != tileset0_num_entries)
+						tileset0_num_entries = isq * isq;
+				}
+                ImGui::SliderInt("X Dimension", &tileset0_xdim, 1, 256);
+				ImGui::SliderInt("Y Dimension", &tileset0_ydim, 1, 256);
+				if (ImGui::Button("Process Tileset 0"))
+				{
+					ini["Tileset"]["Tileset0_index"] = tileset0_index;
+					ini["Tileset"]["Tileset0_asset_index"] = tileset0_asset_index;
+					ini["Tileset"]["Tileset0_num_entries"] = tileset0_num_entries;
+					ini["Tileset"]["Tileset0_xdim"] = tileset0_xdim;
+					ini["Tileset"]["Tileset0_ydim"] = tileset0_ydim;
+					file.write(ini);
+					auto batcher = SDHRCommandBatcher();
+                    DefineTilesetImmediateCmd _udc;
+					_udc.tileset_index = (uint8_t)tileset0_index;
+					_udc.num_entries = (uint8_t)tileset0_num_entries;   // 256 becomes 0
+					_udc.xdim = (uint8_t)tileset0_xdim;   // 256 becomes 0
+					_udc.ydim = (uint8_t)tileset0_ydim;   // 256 becomes 0
+					_udc.asset_index = tileset0_asset_index;
+
+                    // Create the data. We assume here that the tileset is square
+					std::vector<uint16_t> set_addresses;
+					for (auto i = 0; i < 256; ++i) {
+						set_addresses.push_back(i % _udc.num_entries); // x coordinate of tile from PNG
+						set_addresses.push_back(i / _udc.num_entries); // y coordinate of tile from PNG
+					}
+					_udc.data = (uint8_t*)set_addresses.data();
+					auto _cmd = SDHRCommand_DefineTilesetImmediate(&_udc);
+					batcher.AddCommand(&_cmd);
+					batcher.Publish();
+					GameLink::SDHR_process();
+				}
+			}
+			if (ImGui::CollapsingHeader("Tileset 1"))
+			{
+				if (tileset1_num_entries == 0)
+					tileset1_num_entries = 256;
+				ImGui::SliderInt("Asset Index", &tileset1_index, 0, 1);
+                if (ImGui::SliderInt("Number of Entries", &tileset1_num_entries, 1, 256))
+                {
+                    // Check it's a square
+                    float sq = sqrt(tileset1_num_entries);
+                    int isq = std::round(sq);
+                    if (isq * isq != tileset1_num_entries)
+                        tileset1_num_entries = isq * isq;
+                }
+				ImGui::SliderInt("X Dimension", &tileset1_xdim, 1, 256);
+				ImGui::SliderInt("Y Dimension", &tileset1_ydim, 1, 256);
+				if (ImGui::Button("Process Tileset 1"))
+				{
+					ini["Tileset"]["Tileset0_index"] = tileset1_index;
+					ini["Tileset"]["Tileset0_asset_index"] = tileset1_asset_index;
+					ini["Tileset"]["Tileset0_num_entries"] = tileset1_num_entries;
+					ini["Tileset"]["Tileset0_xdim"] = tileset1_xdim;
+					ini["Tileset"]["Tileset0_ydim"] = tileset1_ydim;
+					file.write(ini);
+					auto batcher = SDHRCommandBatcher();
+					DefineTilesetImmediateCmd _udc;
+					_udc.tileset_index = (uint8_t)tileset1_index;
+					_udc.num_entries = (uint8_t)tileset1_num_entries;   // 256 becomes 0
+					_udc.xdim = (uint8_t)tileset1_xdim;   // 256 becomes 0
+					_udc.ydim = (uint8_t)tileset1_ydim;   // 256 becomes 0
+					_udc.asset_index = tileset1_asset_index;
+
+					// Create the data. We assume here that the tileset is square
+					std::vector<uint16_t> set_addresses;
+					for (auto i = 0; i < 256; ++i) {
+						set_addresses.push_back(i % tileset1_num_entries); // x coordinate of tile from PNG
+						set_addresses.push_back(i / _udc.num_entries); // y coordinate of tile from PNG
+					}
+					_udc.data = (uint8_t*)set_addresses.data();
+					auto _cmd = SDHRCommand_DefineTilesetImmediate(&_udc);
+					batcher.AddCommand(&_cmd);
+					batcher.Publish();
+					GameLink::SDHR_process();
+				}
+			}
+			if (ImGui::CollapsingHeader("Window 0"))
+			{
+                // TODO: Enable/Disable window with a button
+                ImGui::SeparatorText("Define Window");
+				ImGui::SeparatorText("Set Single Tileset");
+				ImGui::SeparatorText("Shift Tiles");
+				ImGui::SeparatorText("Set Window Position");
+				ImGui::SeparatorText("Adjust Window View");
+			}
+			if (ImGui::CollapsingHeader("Window 1"))
+			{
+				// TODO: Enable/Disable window with a button
+				ImGui::SeparatorText("Define Window");
+				ImGui::SeparatorText("Set Single Tileset");
+				ImGui::SeparatorText("Shift Tiles");
+				ImGui::SeparatorText("Set Window Position");
+				ImGui::SeparatorText("Adjust Window View");
+			}
             ImGui::End();
         }
 
