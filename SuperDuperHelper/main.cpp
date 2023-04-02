@@ -126,11 +126,12 @@ int main(int, char**)
 	int my_image_width = 0;
 	int my_image_height = 0;
 	GLuint my_image_texture = 0;
+	GLuint gamelink_video_texture = 0;
 
     // Our state
     bool show_demo_window = false;
     bool show_commands_window = false;
-	bool show_tileset_window = true;
+	bool show_tileset_window = false;
 	bool show_gamelink_video_window = true;
     bool is_gamelink_focused = false;
 	ImGuiFileDialog instance_a;
@@ -784,7 +785,6 @@ int main(int, char**)
         {
             // Load video
             auto fbI = GameLink::GetFrameBufferInfo();
-            GLuint gamelink_video_texture = 0;
             bool ret = ImageHelper::LoadTextureFromMemory(fbI.frameBuffer, &gamelink_video_texture, fbI.width, fbI.height, true);
             ImVec2 vpos = ImVec2(300.f, 300.f);
             ImGui::SetNextWindowPos(vpos, ImGuiCond_FirstUseEver);
@@ -804,6 +804,10 @@ int main(int, char**)
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
+        if (show_gamelink_video_window && activate_gamelink)
+        {
+            glDeleteTextures(1, &gamelink_video_texture);
+        }
     }
 #ifdef __EMSCRIPTEN__
     EMSCRIPTEN_MAINLOOP_END;
