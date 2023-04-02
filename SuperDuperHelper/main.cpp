@@ -910,14 +910,15 @@ int main(int, char**)
 					batcher.Publish();
 				}
 			}
+			ImGui::SeparatorText("Window Commands - Applied on a window index");
+			static int _vWindowIndex = 0;
+			ImGui::PushItemWidth(80.f);
+			ImGui::InputInt("Window Index", &_vWindowIndex);
+			ImGui::PopItemWidth();
 			if (ImGui::CollapsingHeader("Update Window: Enable"))
 			{
-				static int _vWindowIndex = 0;
+
 				int _bState = 0;
-				ImGui::PushItemWidth(80.f);
-				ImGui::InputInt("Window Index", &_vWindowIndex);
-				ImGui::PopItemWidth();
-				ImGui::SameLine(200);
 				if (ImGui::Button("Enable Window"))
 				{
 					_bState = 2;
@@ -939,15 +940,41 @@ int main(int, char**)
 					batcher.Publish();
 				}
 			}
-			if (ImGui::CollapsingHeader("Update Window: Set Both"))
-			{
-
-			}
 			if (ImGui::CollapsingHeader("Update Window: Set Upload"))
 			{
-
+				static int _uwsu_tile_xbegin;
+				static int _uwsu_tile_ybegin;
+				static int _uwsu_tile_xcount;
+				static int _uwsu_tile_ycount;
+				static int _uwsu_addr_med;
+				static int _uwsu_addr_high;
+				ImGui::PushItemWidth(80.f);
+				ImGui::Text("Tile Begin:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ", &_uwsu_tile_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px", &window0_tile_ybegin);
+				ImGui::Text("Tile Count:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ", &_uwsu_tile_xcount); ImGui::SameLine(240); ImGui::InputInt(" tiles", &_uwsu_tile_ycount);
+				ImGui::PopItemWidth();
+				ImGui::SliderInt("Med Byte", &_uwsu_addr_med, 0, 255);
+				ImGui::SliderInt("High Byte", &_uwsu_addr_high, 0, 255);
+				if (ImGui::Button("Update"))
+				{
+					auto batcher = SDHRCommandBatcher();
+					UpdateWindowSetUploadCmd _wcmd;
+					_wcmd.window_index = _vWindowIndex;
+					_wcmd.tile_xbegin = _uwsu_tile_xbegin;
+					_wcmd.tile_ybegin = _uwsu_tile_ybegin;
+					_wcmd.upload_addr_med = _uwsu_addr_med;
+					_wcmd.upload_addr_high = _uwsu_addr_high;
+					auto w_enable_cmd = SDHRCommand_UpdateWindowSetUpload(&_wcmd);
+					batcher.AddCommand(&w_enable_cmd);
+					batcher.Publish();
+				}
 			}
 			if (ImGui::CollapsingHeader("Update Window: Single Tileset"))
+			{
+
+			}
+			if (ImGui::CollapsingHeader("Update Window: Set Both"))
 			{
 
 			}
