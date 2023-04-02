@@ -987,6 +987,8 @@ int main(int, char**)
 				ImGui::Text("Tile Count:");  ImGui::SameLine(130);
 				ImGui::InputInt(" ##1uwst", &_uwst_tile_xcount); ImGui::SameLine(240); ImGui::InputInt(" tiles##1uwst", &_uwst_tile_ycount);
 				ImGui::PopItemWidth();
+				ImGui::Text("Data is 1-byte record per tile: an index on the given tileset");
+				ImGui::Text("Max of 4 tiles can be used here.");
 				ImGui::InputInt4("Data##uwst", _uwst_data);
 				if (ImGui::Button("Update##uwst"))
 				{
