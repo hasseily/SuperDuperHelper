@@ -584,7 +584,6 @@ int main(int, char**)
 					auto _cmd = SDHRCommand_UploadDataFilename(&_udc);
 					batcher.AddCommand(&_cmd);
 					batcher.Publish();
-					GameLink::SDHR_process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Image Asset 0"))
@@ -621,7 +620,6 @@ int main(int, char**)
 					auto _cmd = SDHRCommand_DefineImageAssetFilename(&_udc);
 					batcher.AddCommand(&_cmd);
 					batcher.Publish();
-					GameLink::SDHR_process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Image Asset 1"))
@@ -659,7 +657,6 @@ int main(int, char**)
 					auto _cmd = SDHRCommand_DefineImageAssetFilename(&_udc);
 					batcher.AddCommand(&_cmd);
 					batcher.Publish();
-					GameLink::SDHR_process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Tileset 0"))
@@ -667,11 +664,11 @@ int main(int, char**)
                 if (tileset0_num_entries == 0)
                     tileset0_num_entries = 256;
 				ImGui::SliderInt("Asset Index", &tileset0_index, 0, 1);
+                int isq = std::round(sqrt(tileset0_num_entries));
 				if (ImGui::SliderInt("Number of Entries", &tileset0_num_entries, 1, 256))
 				{
 					// Check it's a square
-					float sq = sqrt(tileset0_num_entries);
-					int isq = std::round(sq);
+					isq = std::round(sqrt(tileset0_num_entries));
 					if (isq * isq != tileset0_num_entries)
 						tileset0_num_entries = isq * isq;
 				}
@@ -696,14 +693,13 @@ int main(int, char**)
                     // Create the data. We assume here that the tileset is square
 					std::vector<uint16_t> set_addresses;
 					for (auto i = 0; i < 256; ++i) {
-						set_addresses.push_back(i % _udc.num_entries); // x coordinate of tile from PNG
-						set_addresses.push_back(i / _udc.num_entries); // y coordinate of tile from PNG
+						set_addresses.push_back(i % isq); // x coordinate of tile from PNG
+						set_addresses.push_back(i / isq); // y coordinate of tile from PNG
 					}
 					_udc.data = (uint8_t*)set_addresses.data();
 					auto _cmd = SDHRCommand_DefineTilesetImmediate(&_udc);
 					batcher.AddCommand(&_cmd);
 					batcher.Publish();
-					GameLink::SDHR_process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Tileset 1"))
@@ -711,11 +707,11 @@ int main(int, char**)
 				if (tileset1_num_entries == 0)
 					tileset1_num_entries = 256;
 				ImGui::SliderInt("Asset Index", &tileset1_index, 0, 1);
+				int isq = std::round(sqrt(tileset1_num_entries));
                 if (ImGui::SliderInt("Number of Entries", &tileset1_num_entries, 1, 256))
                 {
                     // Check it's a square
-                    float sq = sqrt(tileset1_num_entries);
-                    int isq = std::round(sq);
+					isq = std::round(sqrt(tileset1_num_entries));
                     if (isq * isq != tileset1_num_entries)
                         tileset1_num_entries = isq * isq;
                 }
@@ -740,14 +736,13 @@ int main(int, char**)
 					// Create the data. We assume here that the tileset is square
 					std::vector<uint16_t> set_addresses;
 					for (auto i = 0; i < 256; ++i) {
-						set_addresses.push_back(i % tileset1_num_entries); // x coordinate of tile from PNG
-						set_addresses.push_back(i / _udc.num_entries); // y coordinate of tile from PNG
+						set_addresses.push_back(i % isq); // x coordinate of tile from PNG
+						set_addresses.push_back(i / isq); // y coordinate of tile from PNG
 					}
 					_udc.data = (uint8_t*)set_addresses.data();
 					auto _cmd = SDHRCommand_DefineTilesetImmediate(&_udc);
 					batcher.AddCommand(&_cmd);
 					batcher.Publish();
-					GameLink::SDHR_process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Window 0"))
