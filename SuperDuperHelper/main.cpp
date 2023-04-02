@@ -191,8 +191,8 @@ int main(int, char**)
     bool activate_gamelink = false;
 	bool activate_sdhr = false;
 
-    uint16_t sprite_posx = 0;
-    uint16_t sprite_posy = 0;
+    int64_t tile_posx = 560;  // coords of iolo's hut
+    int64_t tile_posy = 832;
 
     // Main loop
     bool done = false;
@@ -294,30 +294,40 @@ int main(int, char**)
                 }
             }
 			ImGui::SeparatorText("SDHD Commands");
-            ImGui::InputText("Asset", &asset_name);
-			ImGui::SameLine();
-			if (ImGui::Button("Select File"))
-			{
-				instance_a.OpenDialog("ChooseFileDlgKey", "Choose File", ".png", "./Assets");
-			}
+   //         ImGui::InputText("Asset", &asset_name);
+			//ImGui::SameLine();
+			//if (ImGui::Button("Select File"))
+			//{
+			//	instance_a.OpenDialog("ChooseFileDlgKey", "Choose File", ".png", "./Assets");
+			//}
 
             if (ImGui::Button("Define Structs"))
             {
-                // hacky code used to create data file for britannia map
-                //std::ofstream f("britannia.dat", std::ios::out | std::ios::binary | std::ios::trunc);
+                //// hacky code used to create data file for britannia map
+                //std::ofstream f("Assets/britannia.dat", std::ios::out | std::ios::binary | std::ios::trunc);
                 //for (auto i = 0; i < sizeof(britannia_tiles); ++i) {
                 //    f.put(0);
-                //    f.put(britannia_tiles[i]);
+                //    f.put(brit_lookup()[britannia_tiles[i]]);
                 //}
                 //f.close();
                 auto batcher = SDHRCommandBatcher();
 
+                std::string asset_name = "C:/Users/John/source/repos/SuperDuperHelper/SuperDuperHelper/Assets/Tiles_Ultima5.png";
                 DefineImageAssetFilenameCmd asset_cmd;
                 asset_cmd.asset_index = 0;
                 asset_cmd.filename_length = asset_name.length();
                 asset_cmd.filename = asset_name.c_str();
                 auto assetc = SDHRCommand_DefineImageAssetFilename(&asset_cmd);
                 batcher.AddCommand(&assetc);
+
+                std::string tilefile = "C:/Users/John/source/repos/SuperDuperHelper/SuperDuperHelper/Assets/britannia.dat";
+                UploadDataFilenameCmd upload_tiles;
+                upload_tiles.dest_addr_med = 0;
+                upload_tiles.dest_addr_high = 0;
+                upload_tiles.filename_length = tilefile.length();
+                upload_tiles.filename = tilefile.c_str();
+                auto upload_tiles_cmd = SDHRCommand_UploadDataFilename(&upload_tiles);
+                batcher.AddCommand(&upload_tiles_cmd);
 
                 std::vector<uint16_t> set1_addresses;
                 std::vector<uint16_t> set2_addresses;
@@ -351,36 +361,56 @@ int main(int, char**)
                 DefineWindowCmd w;
                 w.window_index = 0;
                 w.black_or_wrap = false;
-                w.screen_xcount = 640;
-                w.screen_ycount = 352;
+                w.screen_xcount = 336;
+                w.screen_ycount = 336;
                 w.screen_xbegin = 0;
                 w.screen_ybegin = 0;
-                w.tile_xbegin = 0;
-                w.tile_ybegin = 0;
+                w.tile_xbegin = tile_posx;
+                w.tile_ybegin = tile_posy;
                 w.tile_xdim = set1.xdim;
                 w.tile_ydim = set1.ydim;
-                w.tile_xcount = 40;
-                w.tile_ycount = 22;
+                w.tile_xcount = 256;
+                w.tile_ycount = 256;
                 auto w_cmd = SDHRCommand_DefineWindow(&w);
                 batcher.AddCommand(&w_cmd);
 
-                // Set the tile index for all the tiles
-                auto matrix_tiles = std::make_unique<uint8_t[]>((uint64_t)w.tile_xcount * w.tile_ycount);
-                auto mtsize = (uint64_t)w.tile_xcount * w.tile_ycount * sizeof(*matrix_tiles.get());
-                for (auto i = 0; i < mtsize; ++i) {
-                    matrix_tiles[i] = i % 256;
-                }
+                DefineWindowCmd w2;
+                w2.window_index = 1;
+                w2.black_or_wrap = false;
+                w2.screen_xcount = 16;
+                w2.screen_ycount = 16;
+                w2.screen_xbegin = 160;
+                w2.screen_ybegin = 160;
+                w2.tile_xbegin = 0;
+                w2.tile_ybegin = 0;
+                w2.tile_xdim = set2.xdim;
+                w2.tile_ydim = set2.ydim;
+                w2.tile_xcount = 1;
+                w2.tile_ycount = 1;
+                auto w2_cmd = SDHRCommand_DefineWindow(&w2);
+                batcher.AddCommand(&w2_cmd);
 
-                UpdateWindowSingleTilesetCmd set_tiles;
+                UpdateWindowSetUploadCmd set_tiles;
                 set_tiles.window_index = 0;
                 set_tiles.tile_xbegin = 0;
                 set_tiles.tile_ybegin = 0;
                 set_tiles.tile_xcount = w.tile_xcount;
                 set_tiles.tile_ycount = w.tile_ycount;
-                set_tiles.tileset_index = 0;
-                set_tiles.data = matrix_tiles.get();
-                auto set_tiles_cmd = SDHRCommand_UpdateWindowSingleTileset(&set_tiles);
-				batcher.AddCommand(&set_tiles_cmd);
+                set_tiles.upload_addr_med = 0;
+                set_tiles.upload_addr_high = 0;
+                auto set_tiles_cmd = SDHRCommand_UpdateWindowSetUpload(&set_tiles);
+                batcher.AddCommand(&set_tiles_cmd);
+
+                std::array<uint8_t, 2> avatar_tile = { 1, 28 };
+                UpdateWindowSetBothCmd set_tiles2;
+                set_tiles2.window_index = 1;
+                set_tiles2.tile_xbegin = 0;
+                set_tiles2.tile_ybegin = 0;
+                set_tiles2.tile_xcount = 1;
+                set_tiles2.tile_ycount = 1;
+                set_tiles2.data = avatar_tile.data();
+                auto set_tiles2_cmd = SDHRCommand_UpdateWindowSetBoth(&set_tiles2);
+                batcher.AddCommand(&set_tiles2_cmd);
 
                 UpdateWindowEnableCmd w_enable;
                 w_enable.window_index = 0;
@@ -388,88 +418,88 @@ int main(int, char**)
                 auto w_enable_cmd = SDHRCommand_UpdateWindowEnable(&w_enable);
                 batcher.AddCommand(&w_enable_cmd);
 
+                UpdateWindowEnableCmd w_enable2;
+                w_enable2.window_index = 1;
+                w_enable2.enabled = true;
+                auto w_enable2_cmd = SDHRCommand_UpdateWindowEnable(&w_enable2);
+                batcher.AddCommand(&w_enable2_cmd);
+
                 batcher.Publish();
-                GameLink::SDHR_process();
             }
 
-            UpdateWindowSetWindowPositionCmd scWP;
-            scWP.window_index = 1;
-            scWP.screen_xbegin = sprite_posx;
-            scWP.screen_ybegin = sprite_posy;
-			ImGui::SeparatorText("Move Sprite");
-			static int sprite_pos_abs_h = sprite_posx;
-            if (ImGui::SliderInt("Move Sprite Horizontal", &sprite_pos_abs_h, 0, 640))
-            {
-                scWP.screen_xbegin = sprite_pos_abs_h;
-				auto batcher = SDHRCommandBatcher();
-				auto c1 = SDHRCommand_UpdateWindowSetWindowPosition(&scWP);
-				batcher.AddCommand(&c1);
-				batcher.Publish();
-				GameLink::SDHR_process();
-            }
-			static int sprite_pos_abs_v = sprite_posy;
-			if (ImGui::SliderInt("Move Sprite Vertical", &sprite_pos_abs_v, 0, 360))
-			{
-				scWP.screen_ybegin = sprite_pos_abs_v;
-				auto batcher = SDHRCommandBatcher();
-				auto c1 = SDHRCommand_UpdateWindowSetWindowPosition(&scWP);
-				batcher.AddCommand(&c1);
-				batcher.Publish();
-				GameLink::SDHR_process();
-			}
+            UpdateWindowAdjustWindowViewCmd scWP;
+            scWP.window_index = 0;
+            scWP.tile_xbegin = tile_posx;
+            scWP.tile_ybegin = tile_posy;
+			//ImGui::SeparatorText("North");
+			//static int tile_pos_abs_h = tile_posx;
+   //         if (ImGui::SliderInt("Move North", &tile_pos_abs_h, 0, 255))
+   //         {
+   //             struct UpdateWindowAdjustWindowViewCmd {
+   //                 int8_t window_index;
+   //                 int64_t tile_xbegin;
+   //                 int64_t tile_ybegin;
+   //             };
+   //             scWP.screen_xbegin = sprite_pos_abs_h;
+			//	auto batcher = SDHRCommandBatcher();
+			//	auto c1 = SDHRCommand_UpdateWindowSetWindowPosition(&scWP);
+			//	batcher.AddCommand(&c1);
+			//	batcher.Publish();
+   //         }
+			//static int sprite_pos_abs_v = sprite_posy;
+			//if (ImGui::SliderInt("Move Sprite Vertical", &sprite_pos_abs_v, 0, 360))
+			//{
+			//	scWP.screen_ybegin = sprite_pos_abs_v;
+			//	auto batcher = SDHRCommandBatcher();
+			//	auto c1 = SDHRCommand_UpdateWindowSetWindowPosition(&scWP);
+			//	batcher.AddCommand(&c1);
+			//	batcher.Publish();
+			//}
 
-            if (ImGui::Button("Move Sprite Down"))
+            if (ImGui::Button("North"))
             {
-                auto batcher = SDHRCommandBatcher();
-                sprite_posy += 1;
-				scWP.screen_ybegin = sprite_posy;
-				auto c1 = SDHRCommand_UpdateWindowSetWindowPosition(&scWP);
-                batcher.AddCommand(&c1);
-                batcher.Publish();
-                GameLink::SDHR_process();
+                for (auto i = 0; i < 8; ++i) {
+                    auto batcher = SDHRCommandBatcher();
+                    tile_posy -= 2;
+                    scWP.tile_ybegin = tile_posy;
+                    auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
+                    batcher.AddCommand(&c1);
+                    batcher.Publish();
+                }
             }
-            if (ImGui::Button("Move Sprite UP"))
+            if (ImGui::Button("South"))
             {
-                auto batcher = SDHRCommandBatcher();
-                sprite_posy -= 1;
-				scWP.screen_ybegin = sprite_posy;
-				auto c1 = SDHRCommand_UpdateWindowSetWindowPosition(&scWP);
-                batcher.AddCommand(&c1);
-                batcher.Publish();
-                GameLink::SDHR_process();
+                for (auto i = 0; i < 8; ++i) {
+                    auto batcher = SDHRCommandBatcher();
+                    tile_posy += 2;
+                    scWP.tile_ybegin = tile_posy;
+                    auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
+                    batcher.AddCommand(&c1);
+                    batcher.Publish();
+                }
             }
-            if (ImGui::Button("Move Sprite Right"))
+            if (ImGui::Button("East"))
             {
-                auto batcher = SDHRCommandBatcher();
-                sprite_posx += 1;
-				scWP.screen_xbegin = sprite_posx;
-				auto c1 = SDHRCommand_UpdateWindowSetWindowPosition(&scWP);
-                batcher.AddCommand(&c1);
-                batcher.Publish();
-                GameLink::SDHR_process();
+                for (auto i = 0; i < 8; ++i) {
+                    auto batcher = SDHRCommandBatcher();
+                    tile_posx += 2;
+                    scWP.tile_xbegin = tile_posx;
+                    auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
+                    batcher.AddCommand(&c1);
+                    batcher.Publish();
+                }
             }
-            if (ImGui::Button("Move Sprite Left"))
+            if (ImGui::Button("West"))
             {
-                auto batcher = SDHRCommandBatcher();
-                sprite_posx -= 1;
-				scWP.screen_xbegin = sprite_posx;
-				auto c1 = SDHRCommand_UpdateWindowSetWindowPosition(&scWP);
-                batcher.AddCommand(&c1);
-                batcher.Publish();
-                GameLink::SDHR_process();
+                for (auto i = 0; i < 8; ++i) {
+                    auto batcher = SDHRCommandBatcher();
+                    tile_posx -= 2;
+                    scWP.tile_xbegin = tile_posx;
+                    auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
+                    batcher.AddCommand(&c1);
+                    batcher.Publish();
+                }
             }
-            //ImGui::SameLine();
-    //        if (!GameLink::SDHR_IsReadyToProcess())
-    //        {
-    //            ImGui::BeginDisabled();
-    //            ImGui::Button("Process");
-    //            ImGui::EndDisabled();
-    //        }
-    //        else
-    //        {
-				//if (ImGui::Button("Process"))
-				//	GameLink::SDHR_process();
-    //        }
 
 			if (ImGui::Button("Reset"))
 				GameLink::SDHR_reset();

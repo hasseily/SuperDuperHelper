@@ -193,6 +193,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\imgui-1.89.4\misc\debuggers\imgui.natvis" />
+    <None Include="Assets\britannia.dat" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

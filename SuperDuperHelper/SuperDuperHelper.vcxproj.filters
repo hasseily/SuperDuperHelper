@@ -58,6 +58,9 @@
     <ClCompile Include="ImGuiFileDialog\ImGuiFileDialog.cpp">
       <Filter>Other</Filter>
     </ClCompile>
+    <ClCompile Include="..\imgui-1.89.4\misc\cpp\imgui_stdlib.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\imgui-1.89.4\imconfig.h">
@@ -102,12 +105,17 @@
     <ClInclude Include="brittania_tiles.h">
       <Filter>sources</Filter>
     </ClInclude>
+    <ClInclude Include="..\imgui-1.89.4\misc\cpp\imgui_stdlib.h" />
+    <ClInclude Include="ini.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\imgui-1.89.4\misc\debuggers\imgui.natvis">
       <Filter>imgui</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="Assets\britannia.dat">
+      <Filter>Assets</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Font Include="Fonts\Cousine-Regular.ttf">
