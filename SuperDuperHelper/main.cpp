@@ -109,7 +109,7 @@ int main(int, char**)
     //io.Fonts->AddFontDefault();
     //io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0f);
     io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0f);
-    io.Fonts->AddFontFromFileTTF("fonts/Roboto-Medium.ttf", 16.0f);
+    auto myFont = io.Fonts->AddFontFromFileTTF("fonts/Roboto-Medium.ttf", 16.0f);
     io.Fonts->AddFontFromFileTTF("fonts/Cousine-Regular.ttf", 15.0f);
 	io.Fonts->AddFontFromFileTTF("fonts/Karla-Regular.ttf", 15.0f);
 	io.Fonts->AddFontFromFileTTF("fonts/ProggyClean.ttf", 15.0f);
@@ -161,6 +161,30 @@ int main(int, char**)
 	int tileset1_num_entries = 256;
 	int tileset1_xdim = 16;
 	int tileset1_ydim = 16;
+    int window0_index = 0;
+    bool window0_black_or_wrap = false;
+	int window0_screen_xcount = 640;
+	int window0_screen_ycount = 360;
+	int window0_screen_xbegin = 0;
+	int window0_screen_ybegin = 0;
+	int window0_tile_xbegin = 0;
+	int window0_tile_ybegin = 0;
+	int window0_tile_xdim = 16;
+	int window0_tile_ydim = 16;
+	int window0_tile_xcount = 256;
+	int window0_tile_ycount = 256;
+    int window1_index = 1;
+	bool window1_black_or_wrap = false;
+	int window1_screen_xcount = 640;
+	int window1_screen_ycount = 360;
+	int window1_screen_xbegin = 160;
+	int window1_screen_ybegin = 160;
+	int window1_tile_xbegin = 0;
+	int window1_tile_ybegin = 0;
+	int window1_tile_xdim = 16;
+	int window1_tile_ydim = 16;
+	int window1_tile_xcount = 1;
+	int window1_tile_ycount = 1;
     try
     {
 		data_dest_addr_med = std::stoi(ini["Data"]["Data_dest_addr_med"]);
@@ -177,6 +201,30 @@ int main(int, char**)
 		tileset1_num_entries = std::stoi(ini["Tileset"]["Tileset1_num_entries"]);
 		tileset1_xdim = std::stoi(ini["Tileset"]["Tileset1_xdim"]);
 		tileset1_ydim = std::stoi(ini["Tileset"]["Tileset1_ydim"]);
+        window0_index = std::stoi(ini["Window"]["Window0_index"]);
+		window0_black_or_wrap = std::stoi(ini["Window"]["Window0_black_or_wrap"]);
+		window0_screen_xcount = std::stoi(ini["Window"]["Window0_screen_xcount"]);
+		window0_screen_ycount = std::stoi(ini["Window"]["Window0_screen_ycount"]);
+		window0_screen_xbegin = std::stoi(ini["Window"]["Window0_screen_xbegin"]);
+		window0_screen_ybegin = std::stoi(ini["Window"]["Window0_screen_ybegin"]);
+		window0_tile_xbegin = std::stoi(ini["Window"]["Window0_tile_xbegin"]);
+		window0_tile_ybegin = std::stoi(ini["Window"]["Window0_tile_ybegin"]);
+		window0_tile_xdim = std::stoi(ini["Window"]["Window0_tile_xdim"]);
+		window0_tile_ydim = std::stoi(ini["Window"]["Window0_tile_ydim"]);
+		window0_tile_xcount = std::stoi(ini["Window"]["Window0_tile_xcount"]);
+		window0_tile_ycount = std::stoi(ini["Window"]["Window0_tile_ycount"]);
+		window1_index = std::stoi(ini["Window"]["Window1_index"]);
+		window1_black_or_wrap = std::stoi(ini["Window"]["Window1_black_or_wrap"]);
+		window1_screen_xcount = std::stoi(ini["Window"]["Window1_screen_xcount"]);
+		window1_screen_ycount = std::stoi(ini["Window"]["Window1_screen_ycount"]);
+		window1_screen_xbegin = std::stoi(ini["Window"]["Window1_screen_xbegin"]);
+		window1_screen_ybegin = std::stoi(ini["Window"]["Window1_screen_ybegin"]);
+		window1_tile_xbegin = std::stoi(ini["Window"]["Window1_tile_xbegin"]);
+		window1_tile_ybegin = std::stoi(ini["Window"]["Window1_tile_ybegin"]);
+		window1_tile_xdim = std::stoi(ini["Window"]["Window1_tile_xdim"]);
+		window1_tile_ydim = std::stoi(ini["Window"]["Window1_tile_ydim"]);
+		window1_tile_xcount = std::stoi(ini["Window"]["Window1_tile_xcount"]);
+		window1_tile_ycount = std::stoi(ini["Window"]["Window1_tile_ycount"]);
     }
     catch (const std::exception& e)
     {
@@ -256,6 +304,7 @@ int main(int, char**)
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
+		ImGui::PushFont(myFont);
 
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         if (show_demo_window)
@@ -313,7 +362,7 @@ int main(int, char**)
                 //f.close();
                 auto batcher = SDHRCommandBatcher();
 
-                std::string asset_name = "C:/Users/John/source/repos/SuperDuperHelper/SuperDuperHelper/Assets/Tiles_Ultima5.png";
+                std::string asset_name = "D:/repos/SuperDuperHelper/SuperDuperHelper/Assets/Tiles_Ultima5.png";
                 DefineImageAssetFilenameCmd asset_cmd;
                 asset_cmd.asset_index = 0;
                 asset_cmd.filename_length = asset_name.length();
@@ -321,7 +370,7 @@ int main(int, char**)
                 auto assetc = SDHRCommand_DefineImageAssetFilename(&asset_cmd);
                 batcher.AddCommand(&assetc);
 
-                std::string tilefile = "C:/Users/John/source/repos/SuperDuperHelper/SuperDuperHelper/Assets/britannia.dat";
+                std::string tilefile = "D:/repos/SuperDuperHelper/SuperDuperHelper/Assets/britannia.dat";
                 UploadDataFilenameCmd upload_tiles;
                 upload_tiles.dest_addr_med = 0;
                 upload_tiles.dest_addr_high = 0;
@@ -750,6 +799,59 @@ int main(int, char**)
 			{
                 // TODO: Enable/Disable window with a button
                 ImGui::SeparatorText("Define Window");
+				ImGui::Checkbox("Wrap", &window0_black_or_wrap);
+                ImGui::PushItemWidth(80.f);
+				ImGui::Text("Screen Pixels:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ", &window0_screen_xcount); ImGui::SameLine(240); ImGui::InputInt(" px", &window0_screen_ycount);
+                ImGui::Text("Screen Begin:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ", &window0_screen_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px", &window0_screen_ybegin);
+				ImGui::Text("Tile Begin:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ", &window0_tile_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px", &window0_tile_ybegin);
+				ImGui::Text("Tile Dimensions:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ", &window0_tile_xdim); ImGui::SameLine(240); ImGui::InputInt(" px", &window0_tile_ydim);
+				ImGui::Text("Tile Count:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ", &window0_tile_xcount); ImGui::SameLine(240); ImGui::InputInt(" tiles", &window0_tile_ycount);
+				ImGui::PopItemWidth();
+				if (ImGui::Button("Define Window 0"))
+				{
+					ini["Window"]["Window0_index"] = window0_index;
+					ini["Window"]["Window0_black_or_wrap"] = window0_black_or_wrap;
+					ini["Window"]["Window0_screen_xcount"] = window0_screen_xcount;
+					ini["Window"]["Window0_screen_ycount"] = window0_screen_ycount;
+					ini["Window"]["Window0_screen_xbegin"] = window0_screen_xbegin;
+					ini["Window"]["Window0_screen_ybegin"] = window0_screen_ybegin;
+					ini["Window"]["Window0_tile_xbegin"] = window0_tile_xbegin;
+					ini["Window"]["Window0_tile_ybegin"] = window0_tile_ybegin;
+					ini["Window"]["Window0_tile_xdim"] = window0_tile_xdim;
+					ini["Window"]["Window0_tile_ydim"] = window0_tile_ydim;
+					ini["Window"]["Window0_tile_xcount"] = window0_tile_xcount;
+					ini["Window"]["Window0_tile_ycount"] = window0_tile_ycount;
+					file.write(ini);
+					auto batcher = SDHRCommandBatcher();
+                    DefineWindowCmd _udc;
+					_udc.window_index = window0_index;
+					_udc.black_or_wrap = window0_black_or_wrap;
+					_udc.screen_xcount = window0_screen_xcount;
+					_udc.screen_ycount = window0_screen_ycount;
+					_udc.screen_xbegin = window0_screen_xbegin;
+					_udc.screen_ybegin = window0_screen_ybegin;
+					_udc.tile_xbegin = window0_tile_xbegin;
+					_udc.tile_ybegin = window0_tile_ybegin;
+					_udc.tile_xdim = window0_tile_xdim;
+					_udc.tile_ydim = window0_tile_ydim;
+					_udc.tile_xcount = window0_tile_xcount;
+					_udc.tile_ycount = window0_tile_ycount;
+					auto _cmd = SDHRCommand_DefineWindow(&_udc);
+					batcher.AddCommand(&_cmd);
+					// auto-enable the window
+					UpdateWindowEnableCmd w_enable;
+					w_enable.window_index = 0;
+					w_enable.enabled = true;
+					auto w_enable_cmd = SDHRCommand_UpdateWindowEnable(&w_enable);
+					batcher.AddCommand(&w_enable_cmd);
+					batcher.Publish();
+				}
+
 				ImGui::SeparatorText("Set Single Tileset");
 				ImGui::SeparatorText("Shift Tiles");
 				ImGui::SeparatorText("Set Window Position");
@@ -758,7 +860,60 @@ int main(int, char**)
 			if (ImGui::CollapsingHeader("Window 1"))
 			{
 				// TODO: Enable/Disable window with a button
+								// TODO: Enable/Disable window with a button
 				ImGui::SeparatorText("Define Window");
+				ImGui::Checkbox("Wrap", &window1_black_or_wrap);
+				ImGui::PushItemWidth(80.f);
+				ImGui::Text("Screen Pixels:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ", &window1_screen_xcount); ImGui::SameLine(240); ImGui::InputInt(" px", &window1_screen_ycount);
+				ImGui::Text("Screen Begin:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ", &window1_screen_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px", &window1_screen_ybegin);
+				ImGui::Text("Tile Begin:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ", &window1_tile_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px", &window1_tile_ybegin);
+				ImGui::Text("Tile Dimensions:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ", &window1_tile_xdim); ImGui::SameLine(240); ImGui::InputInt(" px", &window1_tile_ydim);
+				ImGui::Text("Tile Count:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ", &window1_tile_xcount); ImGui::SameLine(240); ImGui::InputInt(" tiles", &window1_tile_ycount);
+				ImGui::PopItemWidth();
+				if (ImGui::Button("Define Window 0"))
+				{
+					ini["Window"]["Window1_index"] = window1_index;
+					ini["Window"]["Window1_black_or_wrap"] = window1_black_or_wrap;
+					ini["Window"]["Window1_screen_xcount"] = window1_screen_xcount;
+					ini["Window"]["Window1_screen_ycount"] = window1_screen_ycount;
+					ini["Window"]["Window1_screen_xbegin"] = window1_screen_xbegin;
+					ini["Window"]["Window1_screen_ybegin"] = window1_screen_ybegin;
+					ini["Window"]["Window1_tile_xbegin"] = window1_tile_xbegin;
+					ini["Window"]["Window1_tile_ybegin"] = window1_tile_ybegin;
+					ini["Window"]["Window1_tile_xdim"] = window1_tile_xdim;
+					ini["Window"]["Window1_tile_ydim"] = window1_tile_ydim;
+					ini["Window"]["Window1_tile_xcount"] = window1_tile_xcount;
+					ini["Window"]["Window1_tile_ycount"] = window1_tile_ycount;
+					file.write(ini);
+					auto batcher = SDHRCommandBatcher();
+					DefineWindowCmd _udc;
+					_udc.window_index = window1_index;
+					_udc.black_or_wrap = window1_black_or_wrap;
+					_udc.screen_xcount = window1_screen_xcount;
+					_udc.screen_ycount = window1_screen_ycount;
+					_udc.screen_xbegin = window1_screen_xbegin;
+					_udc.screen_ybegin = window1_screen_ybegin;
+					_udc.tile_xbegin = window1_tile_xbegin;
+					_udc.tile_ybegin = window1_tile_ybegin;
+					_udc.tile_xdim = window1_tile_xdim;
+					_udc.tile_ydim = window1_tile_ydim;
+					_udc.tile_xcount = window1_tile_xcount;
+					_udc.tile_ycount = window1_tile_ycount;
+					auto _cmd = SDHRCommand_DefineWindow(&_udc);
+					batcher.AddCommand(&_cmd);
+					// auto-enable the window
+					UpdateWindowEnableCmd w_enable;
+					w_enable.window_index = 1;
+					w_enable.enabled = true;
+					auto w_enable_cmd = SDHRCommand_UpdateWindowEnable(&w_enable);
+					batcher.AddCommand(&w_enable_cmd);
+					batcher.Publish();
+				}
 				ImGui::SeparatorText("Set Single Tileset");
 				ImGui::SeparatorText("Shift Tiles");
 				ImGui::SeparatorText("Set Window Position");
@@ -796,6 +951,8 @@ int main(int, char**)
         }
         else
             is_gamelink_focused = false;
+
+		ImGui::PopFont();
 
         // Rendering
         ImGui::Render();
