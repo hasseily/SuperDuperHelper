@@ -1055,15 +1055,61 @@ int main(int, char**)
 			}
 			if (ImGui::CollapsingHeader("Update Window: Shift Tiles"))
 			{
-
+				static int _uwshift_x = 0;
+				static int _uwshift_y = 0;
+				ImGui::SliderInt("Shift X##uwshift", &_uwshift_x, -127, 127);
+				ImGui::SliderInt("Shift X##uwshift", &_uwshift_y, -127, 127);
+				if (ImGui::Button("Shift Tiles##uwshift"))
+				{
+					auto batcher = SDHRCommandBatcher();
+					UpdateWindowShiftTilesCmd _wcmd;
+					_wcmd.window_index = _vWindowIndex;
+					_wcmd.x_dir = _uwshift_x;
+					_wcmd.y_dir = _uwshift_y;
+					auto w_updateb_cmd = SDHRCommand_UpdateWindowShiftTiles(&_wcmd);
+					batcher.AddCommand(&w_updateb_cmd);
+					batcher.Publish();
+				}
 			}
 			if (ImGui::CollapsingHeader("Update Window: Set Window Position"))
 			{
-
+				static int _uwsetwin_x = 0;
+				static int _uwsetwin_y = 0;
+				ImGui::Text("Set the window position by defining the top left screen xy pixel");
+				ImGui::PushItemWidth(140.f);
+				ImGui::InputInt("PosX##uwsetwin", &_uwsetwin_x); ImGui::SameLine(220); ImGui::InputInt("PosY##uwsetwin", &_uwsetwin_y);
+				ImGui::PopItemWidth();
+				if (ImGui::Button("Set Window Position##uwsetwin"))
+				{
+					auto batcher = SDHRCommandBatcher();
+					UpdateWindowSetWindowPositionCmd _wcmd;
+					_wcmd.window_index = _vWindowIndex;
+					_wcmd.screen_xbegin = _uwsetwin_x;
+					_wcmd.screen_ybegin = _uwsetwin_y;
+					auto w_updateb_cmd = SDHRCommand_UpdateWindowSetWindowPosition(&_wcmd);
+					batcher.AddCommand(&w_updateb_cmd);
+					batcher.Publish();
+				}
 			}
 			if (ImGui::CollapsingHeader("Update Window: Adjust Window View"))
 			{
-
+				static int _uwadjview_x = 0;
+				static int _uwadjview_y = 0;
+				ImGui::Text("Adjust the window view by defining the top left tile xy");
+				ImGui::PushItemWidth(80.f);
+				ImGui::InputInt("TileX##uwadjview", &_uwadjview_x); ImGui::SameLine(150); ImGui::InputInt("TileY##uwadjview", &_uwadjview_y);
+				ImGui::PopItemWidth();
+				if (ImGui::Button("Adjust Window View##uwadjview"))
+				{
+					auto batcher = SDHRCommandBatcher();
+					UpdateWindowAdjustWindowViewCmd _wcmd;
+					_wcmd.window_index = _vWindowIndex;
+					_wcmd.tile_xbegin = _uwadjview_x;
+					_wcmd.tile_ybegin = _uwadjview_y;
+					auto w_updateb_cmd = SDHRCommand_UpdateWindowAdjustWindowView(&_wcmd);
+					batcher.AddCommand(&w_updateb_cmd);
+					batcher.Publish();
+				}
 			}
             ImGui::End();
         }
