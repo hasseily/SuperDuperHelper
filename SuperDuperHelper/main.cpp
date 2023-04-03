@@ -13,6 +13,7 @@
 #include "font8x8.h"
 #include "brittania_tiles.h"
 #include <fstream>
+#include <filesystem>
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <SDL_opengles2.h>
 #else
@@ -362,7 +363,8 @@ int main(int, char**)
                 //f.close();
                 auto batcher = SDHRCommandBatcher();
 
-                std::string asset_name = "D:/repos/SuperDuperHelper/SuperDuperHelper/Assets/Tiles_Ultima5.png";
+				std::filesystem::path asset_path = "Assets/Tiles_Ultima5.png";
+				std::string asset_name = std::filesystem::absolute(asset_path).string();
                 DefineImageAssetFilenameCmd asset_cmd;
                 asset_cmd.asset_index = 0;
                 asset_cmd.filename_length = asset_name.length();
@@ -370,7 +372,8 @@ int main(int, char**)
                 auto assetc = SDHRCommand_DefineImageAssetFilename(&asset_cmd);
                 batcher.AddCommand(&assetc);
 
-                std::string tilefile = "D:/repos/SuperDuperHelper/SuperDuperHelper/Assets/britannia.dat";
+				std::filesystem::path tilepath = "Assets/britannia.dat";
+                std::string tilefile = std::filesystem::absolute(tilepath).string();
                 UploadDataFilenameCmd upload_tiles;
                 upload_tiles.dest_addr_med = 0;
                 upload_tiles.dest_addr_high = 0;
