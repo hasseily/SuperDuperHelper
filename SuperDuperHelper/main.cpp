@@ -1001,7 +1001,7 @@ int main(int, char**)
 					_wcmd.tile_ycount = _uwst_tile_ycount;
 					_wcmd.tileset_index = _uwst_tileset_index;
 					uint8_t _uwst_data2[4];
-					for (size_t i = 0; i < 4; i++)
+					for (size_t i = 0; i < std::max(4, _uwst_tile_xcount * _uwst_tile_ycount); i++)
 					{
 						_uwst_data2[i] = (uint8_t)_uwst_data[i];
 					}
@@ -1013,7 +1013,42 @@ int main(int, char**)
 			}
 			if (ImGui::CollapsingHeader("Update Window: Set Both"))
 			{
-
+				static int _uwsb_tile_xbegin;
+				static int _uwsb_tile_ybegin;
+				static int _uwsb_tile_xcount;
+				static int _uwsb_tile_ycount;
+				static int _uwsb_tileset[4] = { 0, 0, 0, 0 };
+				static int _uwsb_data[4] = { 0, 0, 0, 0 };
+				ImGui::PushItemWidth(80.f);
+				ImGui::Text("Tile Begin:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ##0uwsb", &_uwsb_tile_xbegin); ImGui::SameLine(240); ImGui::InputInt(" px##0uwsb", &_uwsb_tile_ybegin);
+				ImGui::Text("Tile Count:");  ImGui::SameLine(130);
+				ImGui::InputInt(" ##1uwsb", &_uwsb_tile_xcount); ImGui::SameLine(240); ImGui::InputInt(" tiles##1uwsb", &_uwsb_tile_ycount);
+				ImGui::PopItemWidth();
+				ImGui::Text("Input tileset and index for each tile.");
+				ImGui::Text("Max of 4 tiles can be used here.");
+				ImGui::InputInt4("Tilesets##uwsb", _uwsb_tileset);
+				ImGui::InputInt4("Index##uwsb", _uwsb_data);
+				if (ImGui::Button("Update##uwsb"))
+				{
+					auto batcher = SDHRCommandBatcher();
+					UpdateWindowSetBothCmd _wcmd;
+					_wcmd.window_index = _vWindowIndex;
+					_wcmd.tile_xbegin = _uwsb_tile_xbegin;
+					_wcmd.tile_ybegin = _uwsb_tile_ybegin;
+					_wcmd.tile_xcount = _uwsb_tile_xcount;
+					_wcmd.tile_ycount = _uwsb_tile_ycount;
+					uint8_t _uwsb_data2[8];
+					for (size_t i = 0; i < std::max(4, _uwsb_tile_xcount * _uwsb_tile_ycount); i++)
+					{
+						_uwsb_data2[i * 2] = (uint8_t)_uwsb_tileset[i];
+						_uwsb_data2[(i * 2) + 1] = (uint8_t)_uwsb_data[i];
+					}
+					_wcmd.data = _uwsb_data2;
+					auto w_updateb_cmd = SDHRCommand_UpdateWindowSetBoth(&_wcmd);
+					batcher.AddCommand(&w_updateb_cmd);
+					batcher.Publish();
+				}
 			}
 			if (ImGui::CollapsingHeader("Update Window: Shift Tiles"))
 			{
