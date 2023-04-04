@@ -1,28 +1,67 @@
 #include "SDHRCommand.h"
 #include <stdint.h>
+#include <iostream>
+#include <winsock2.h>
 
 
-/* End SHDR Command Structures */
+extern std::string server_ip;
+extern int server_port;
 
-void SDHRCommandBatcher::Publish()
+SDHRCommandBatcher::SDHRCommandBatcher()
 {
-	// TODO: Shouldn't have to recreate a vector
-	uint64_t vecsize = 0;
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(server_port);
+	server_addr.sin_addr.s_addr = inet_addr(server_ip.c_str());
+	memset(&(server_addr.sin_zero), '\0', 8);
+
+	if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+		std::cerr << "Error creating socket" << std::endl;
+	}
+	if (connect(client_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
+		std::cerr << "Error connecting to server" << std::endl;
+	}
+}
+
+SDHRCommandBatcher::~SDHRCommandBatcher()
+{
+	closesocket(client_fd);
+}
+
+void SDHRCommandBatcher::SDHR_On()
+{
+	char _d[4] = { cxSDHR_hi, cxSDHR_ctrl, (char)SDHRControls::ENABLE, 0 };
+	send(client_fd, _d, 4, 0);
+}
+
+void SDHRCommandBatcher::SDHR_Off()
+{
+	char _d[4] = { cxSDHR_hi, cxSDHR_ctrl, (char)SDHRControls::DISABLE, 0 };
+	send(client_fd, _d, 4, 0);
+}
+
+void SDHRCommandBatcher::SDHR_Reset()
+{
+	char _d[4] = { cxSDHR_hi, cxSDHR_ctrl, (char)SDHRControls::RESET, 0 };
+	send(client_fd, _d, 4, 0);
+}
+
+void SDHRCommandBatcher::SDHR_process()
+{
+	// Always send 4 bytes: the address (0xC0B0 for ctrl or 0xC0B1 for data), the data byte, and a pad byte
+	char _d[4] = { cxSDHR_hi, cxSDHR_data, 0, 0 };
 	for (auto& cmd : v_cmds)
 	{
-		vecsize += cmd->v_data.size();
+		// Send all the data
+		for (auto& datab : cmd->v_data)
+		{
+			_d[3] = datab;
+			send(client_fd, _d, 4, 0);
+		}
 	}
-	std::vector<uint8_t> v_fulldata;
-	v_fulldata.reserve(vecsize);
-	for (auto& cmd : v_cmds)
-	{
-		uint16_t cmd_size = cmd->v_data.size() - 1;
-		uint8_t* p_cmdsize = (uint8_t*)&cmd_size;
-		v_fulldata.insert(v_fulldata.end(), p_cmdsize, p_cmdsize + 2);
-		v_fulldata.insert(v_fulldata.end(), cmd->v_data.begin(), cmd->v_data.end());
-	}
-	GameLink::SDHR_write(v_fulldata);
-	GameLink::SendCommand(std::string(":sdhr_process"));
+	// Now send the control command
+	_d[2] = cxSDHR_ctrl;
+	_d[3] = (char)SDHRControls::PROCESS;
+	send(client_fd, _d, 4, 0);
 }
 
 void SDHRCommandBatcher::AddCommand(SDHRCommand* command)

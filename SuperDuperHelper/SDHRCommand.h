@@ -1,6 +1,42 @@
 #pragma once
-#include "GameLink.h"
 #include <vector>
+#include <string>
+#include <ws2def.h>
+
+static unsigned char cxSDHR_hi = 0xC0;		// SDHR High byte of 0xC0B.
+static unsigned char cxSDHR_ctrl = 0xB0;	// SDHR Low byte of 0xC0B. command
+static unsigned char cxSDHR_data = 0xB1;	// SDHR Low byte of 0xC01. data
+
+enum class SDHRControls
+{
+	DISABLE = 0,
+	ENABLE,
+	PROCESS,
+	RESET
+};
+
+/**
+ * @brief SDHR Command structures
+*/
+enum class SDHR_CMD {
+	NONE = 0,
+	UPLOAD_DATA = 1,
+	DEFINE_IMAGE_ASSET = 2,
+	DEFINE_IMAGE_ASSET_FILENAME = 3,
+	DEFINE_TILESET = 4,
+	DEFINE_TILESET_IMMEDIATE = 5,
+	DEFINE_WINDOW = 6,
+	UPDATE_WINDOW_SET_BOTH = 7,
+	UPDATE_WINDOW_SINGLE_TILESET = 8,
+	UPDATE_WINDOW_SHIFT_TILES = 9,
+	UPDATE_WINDOW_SET_WINDOW_POSITION = 10,
+	UPDATE_WINDOW_ADJUST_WINDOW_VIEW = 11,
+	UPDATE_WINDOW_SET_BITMASKS = 12,
+	UPDATE_WINDOW_ENABLE = 13,
+	READY = 14,
+	UPLOAD_DATA_FILENAME = 15,
+	UPDATE_WINDOW_SET_UPLOAD = 16,
+};
 
 class SDHRCommand;	// forward declaration
 
@@ -13,16 +49,20 @@ class SDHRCommandBatcher
 {
 public:
 
-	// Publishes the queued commands.
-	// Call GameLink::SDHR_process() to have AppleWin process them
-	void Publish();
-
 	// Stream of subcommands to add to the command
 	// They'll be processed in FIFO.
 	void AddCommand(SDHRCommand* command);
 
+	void SDHR_On();
+	void SDHR_Off();
+	void SDHR_Reset();
+	// Publishes the queued commands.
+	void SDHR_process();
+
 private:
 	std::vector<SDHRCommand*> v_cmds;
+	int client_fd;
+	sockaddr_in server_addr;
 };
 
 /**

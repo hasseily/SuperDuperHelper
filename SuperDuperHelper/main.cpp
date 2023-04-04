@@ -126,18 +126,29 @@ int main(int, char**)
 	int my_image_width = 0;
 	int my_image_height = 0;
 	GLuint my_image_texture = 0;
-	GLuint gamelink_video_texture = 0;
 
     // Our state
     bool show_demo_window = false;
     bool show_commands_window = false;
 	bool show_tileset_window = false;
-	bool show_gamelink_video_window = true;
-    bool is_gamelink_focused = false;
 	ImGuiFileDialog instance_a;
 	ImGuiFileDialog dialog_data;
 	ImGuiFileDialog dialog_image0;
 	ImGuiFileDialog dialog_image1;
+
+	// Socket Server
+	static std::string server_ip = ini["Server"]["IP"];
+	if (server_ip.length() == 0)
+		server_ip = "127.0.0.1";
+	static int server_port = 8080;
+	try
+	{
+		server_port = std::stoi(ini["Server"]["Port"]);
+	}
+	catch (const std::exception& e)
+	{
+
+	}
 
     std::string asset_name = ini["Assets"]["Dialog1"];  // TODO: Remove
     {
@@ -231,13 +242,8 @@ int main(int, char**)
     	
     }
 
-
-
-
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    // GameLink State
-    bool activate_gamelink = false;
 	bool activate_sdhr = false;
 
     int64_t tile_posx = 560;  // coords of iolo's hut
@@ -263,25 +269,6 @@ int main(int, char**)
         while (SDL_PollEvent(&event))
         {
             ImGui_ImplSDL2_ProcessEvent(&event);
-            if (is_gamelink_focused)
-            {
-#pragma warning(push)
-#pragma warning( disable : 26812 )    // unscoped enum
-				switch (event.type)
-				{
-				case SDL_KEYDOWN:
-					keyboard[event.key.keysym.sym] = true;
-                    if (GameLink::IsActive())
-                        GameLink::SendKeystroke((UINT)SDL_GetScancodeFromKey(event.key.keysym.sym), true);
-					break;
-				case SDL_KEYUP:
-					keyboard[event.key.keysym.sym] = false;
-                    if (GameLink::IsActive())
-					    GameLink::SendKeystroke((UINT)SDL_GetScancodeFromKey(event.key.keysym.sym), false);
-					break;
-				}
-#pragma warning(pop)
-            }
             if (event.type == SDL_QUIT)
                 done = true;
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
@@ -315,31 +302,28 @@ int main(int, char**)
             static float f = 0.0f;
             static int counter = 0;
 
-            ImGui::Begin("GameLink Configuration");
+            ImGui::Begin("SDHD Configuration");
+			ImGui::SeparatorText("Server Connection");
+			if (ImGui::InputText("IP##server", &server_ip) || ImGui::InputInt("Port##server", &server_port))
+			{
+				ini["Server"]["IP"] = server_ip;
+				ini["Server"]["Port"] = server_port;
+				file.write(ini);
+			}
 
-            ImGui::SeparatorText("SuperDuper High Resolution Testing");               // Display some text (you can use a format strings too)
-            if (ImGui::Checkbox("GameLink Active", &activate_gamelink))
-            {
-				if (!GameLink::IsActive() && activate_gamelink)
-					activate_gamelink = GameLink::Init();
-                else if (GameLink::IsActive() && !activate_gamelink)
-					GameLink::Destroy();
-                activate_gamelink = GameLink::IsActive();
-            }
-
-			if (!activate_gamelink)
-				ImGui::BeginDisabled();
+            ImGui::SeparatorText("SuperDuper High Resolution Testing");
 
             if (ImGui::Checkbox("Enable SuperDuperHiRes (SDHR)", &activate_sdhr))
             {
+				auto batcher = SDHRCommandBatcher();
                 if (activate_sdhr)
                 {
-                    GameLink::SDHR_on();
+                    batcher.SDHR_On();
                     show_commands_window = true;
                 }
                 else
                 {
-                    GameLink::SDHR_off();
+					batcher.SDHR_Off();
 					show_commands_window = false;
                 }
             }
@@ -474,7 +458,7 @@ int main(int, char**)
                 auto w_enable2_cmd = SDHRCommand_UpdateWindowEnable(&w_enable2);
                 batcher.AddCommand(&w_enable2_cmd);
 
-                batcher.Publish();
+                batcher.SDHR_process();
             }
 
             UpdateWindowAdjustWindowViewCmd scWP;
@@ -494,7 +478,7 @@ int main(int, char**)
 			//	auto batcher = SDHRCommandBatcher();
 			//	auto c1 = SDHRCommand_UpdateWindowSetWindowPosition(&scWP);
 			//	batcher.AddCommand(&c1);
-			//	batcher.Publish();
+			//	batcher.SDHR_process();
    //         }
 			//static int sprite_pos_abs_v = sprite_posy;
 			//if (ImGui::SliderInt("Move Sprite Vertical", &sprite_pos_abs_v, 0, 360))
@@ -503,7 +487,7 @@ int main(int, char**)
 			//	auto batcher = SDHRCommandBatcher();
 			//	auto c1 = SDHRCommand_UpdateWindowSetWindowPosition(&scWP);
 			//	batcher.AddCommand(&c1);
-			//	batcher.Publish();
+			//	batcher.SDHR_process();
 			//}
 
             if (ImGui::Button("North"))
@@ -514,7 +498,7 @@ int main(int, char**)
                     scWP.tile_ybegin = tile_posy;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
-                    batcher.Publish();
+                    batcher.SDHR_process();
                 }
             }
             if (ImGui::Button("South"))
@@ -525,7 +509,7 @@ int main(int, char**)
                     scWP.tile_ybegin = tile_posy;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
-                    batcher.Publish();
+                    batcher.SDHR_process();
                 }
             }
             if (ImGui::Button("East"))
@@ -536,7 +520,7 @@ int main(int, char**)
                     scWP.tile_xbegin = tile_posx;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
-                    batcher.Publish();
+                    batcher.SDHR_process();
                 }
             }
             if (ImGui::Button("West"))
@@ -547,15 +531,15 @@ int main(int, char**)
                     scWP.tile_xbegin = tile_posx;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
-                    batcher.Publish();
+                    batcher.SDHR_process();
                 }
             }
 
 			if (ImGui::Button("Reset"))
-				GameLink::SDHR_reset();
-
-			if (!activate_gamelink)
-				ImGui::EndDisabled();
+			{
+				auto batcher = SDHRCommandBatcher();
+				batcher.SDHR_Reset();
+			}
 
             ImGui::NewLine();
 
@@ -633,7 +617,7 @@ int main(int, char**)
                     _udc.filename = data_filename.c_str();
 					auto _cmd = SDHRCommand_UploadDataFilename(&_udc);
 					batcher.AddCommand(&_cmd);
-					batcher.Publish();
+					batcher.SDHR_process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Image Asset 0"))
@@ -669,7 +653,7 @@ int main(int, char**)
 					_udc.filename = image0_filename.c_str();
 					auto _cmd = SDHRCommand_DefineImageAssetFilename(&_udc);
 					batcher.AddCommand(&_cmd);
-					batcher.Publish();
+					batcher.SDHR_process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Image Asset 1"))
@@ -706,7 +690,7 @@ int main(int, char**)
 					_udc.filename = image1_filename.c_str();
 					auto _cmd = SDHRCommand_DefineImageAssetFilename(&_udc);
 					batcher.AddCommand(&_cmd);
-					batcher.Publish();
+					batcher.SDHR_process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Tileset 0"))
@@ -749,7 +733,7 @@ int main(int, char**)
 					_udc.data = (uint8_t*)set_addresses.data();
 					auto _cmd = SDHRCommand_DefineTilesetImmediate(&_udc);
 					batcher.AddCommand(&_cmd);
-					batcher.Publish();
+					batcher.SDHR_process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Tileset 1"))
@@ -792,7 +776,7 @@ int main(int, char**)
 					_udc.data = (uint8_t*)set_addresses.data();
 					auto _cmd = SDHRCommand_DefineTilesetImmediate(&_udc);
 					batcher.AddCommand(&_cmd);
-					batcher.Publish();
+					batcher.SDHR_process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Window 0"))
@@ -849,7 +833,7 @@ int main(int, char**)
 					w_enable.enabled = true;
 					auto w_enable_cmd = SDHRCommand_UpdateWindowEnable(&w_enable);
 					batcher.AddCommand(&w_enable_cmd);
-					batcher.Publish();
+					batcher.SDHR_process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Window 1"))
@@ -907,7 +891,7 @@ int main(int, char**)
 					w_enable.enabled = true;
 					auto w_enable_cmd = SDHRCommand_UpdateWindowEnable(&w_enable);
 					batcher.AddCommand(&w_enable_cmd);
-					batcher.Publish();
+					batcher.SDHR_process();
 				}
 			}
 			ImGui::SeparatorText("Window Commands - Applied on a window index");
@@ -937,7 +921,7 @@ int main(int, char**)
 					w_enable.enabled = _bState - 1;
 					auto w_enable_cmd = SDHRCommand_UpdateWindowEnable(&w_enable);
 					batcher.AddCommand(&w_enable_cmd);
-					batcher.Publish();
+					batcher.SDHR_process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Update Window: Set Upload"))
@@ -969,7 +953,7 @@ int main(int, char**)
 					_wcmd.upload_addr_high = _uwsu_addr_high;
 					auto w_enable_cmd = SDHRCommand_UpdateWindowSetUpload(&_wcmd);
 					batcher.AddCommand(&w_enable_cmd);
-					batcher.Publish();
+					batcher.SDHR_process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Update Window: Single Tileset"))
@@ -1008,7 +992,7 @@ int main(int, char**)
 					_wcmd.data = _uwst_data2;
 					auto w_enable_cmd = SDHRCommand_UpdateWindowSingleTileset(&_wcmd);
 					batcher.AddCommand(&w_enable_cmd);
-					batcher.Publish();
+					batcher.SDHR_process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Update Window: Set Both"))
@@ -1047,7 +1031,7 @@ int main(int, char**)
 					_wcmd.data = _uwsb_data2;
 					auto w_updateb_cmd = SDHRCommand_UpdateWindowSetBoth(&_wcmd);
 					batcher.AddCommand(&w_updateb_cmd);
-					batcher.Publish();
+					batcher.SDHR_process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Update Window: Shift Tiles"))
@@ -1077,24 +1061,6 @@ int main(int, char**)
 			ImGui::End();
 		}
 
-		// 4. Show gamelink in a window
-
-        if (show_gamelink_video_window && activate_gamelink)
-        {
-            // Load video
-            auto fbI = GameLink::GetFrameBufferInfo();
-            bool ret = ImageHelper::LoadTextureFromMemory(fbI.frameBuffer, &gamelink_video_texture, fbI.width, fbI.height, true);
-            ImVec2 vpos = ImVec2(300.f, 300.f);
-            ImGui::SetNextWindowPos(vpos, ImGuiCond_FirstUseEver);
-            ImGui::Begin("AppleWin Video", &show_gamelink_video_window);
-            ImGui::Text("size = %d x %d", fbI.width, fbI.height);
-            ImGui::Image((void*)(intptr_t)gamelink_video_texture, ImVec2(fbI.width, fbI.height), ImVec2(0, 1), ImVec2(1, 0));
-            is_gamelink_focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
-            ImGui::End();
-        }
-        else
-            is_gamelink_focused = false;
-
 		ImGui::PopFont();
 
         // Rendering
@@ -1104,18 +1070,12 @@ int main(int, char**)
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
-        if (show_gamelink_video_window && activate_gamelink)
-        {
-            glDeleteTextures(1, &gamelink_video_texture);
-        }
     }
 #ifdef __EMSCRIPTEN__
     EMSCRIPTEN_MAINLOOP_END;
 #endif
 
     // Cleanup
-    if (GameLink::IsActive())
-        GameLink::Destroy();
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
