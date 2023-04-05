@@ -1,5 +1,6 @@
 #include "SDHRCommand.h"
 
+
 SDHRCommandBatcher::SDHRCommandBatcher(std::string server_ip, int server_port)
 {
 	WSADATA wsaData;
@@ -29,6 +30,8 @@ SDHRCommandBatcher::SDHRCommandBatcher(std::string server_ip, int server_port)
 		return;
 	}
 	isConnected = true;
+
+	packet.pad = 0;
 }
 
 SDHRCommandBatcher::~SDHRCommandBatcher()
@@ -39,39 +42,42 @@ SDHRCommandBatcher::~SDHRCommandBatcher()
 
 void SDHRCommandBatcher::SDHR_On()
 {
-	char _d[4] = { cxSDHR_hi, cxSDHR_ctrl, (char)SDHRControls::ENABLE, 0 };
-	send(client_socket, _d, 4, 0);
+	packet.addr = cxSDHR_ctrl;
+	packet.data = (uint8_t)SDHRControls::ENABLE;
+	send(client_socket, (char *)&packet, 4, 0);
 }
 
 void SDHRCommandBatcher::SDHR_Off()
 {
-	char _d[4] = { cxSDHR_hi, cxSDHR_ctrl, (char)SDHRControls::DISABLE, 0 };
-	send(client_socket, _d, 4, 0);
+	packet.addr = cxSDHR_ctrl;
+	packet.data = (uint8_t)SDHRControls::DISABLE;
+	send(client_socket, (char*)&packet, 4, 0);
 }
 
 void SDHRCommandBatcher::SDHR_Reset()
 {
-	char _d[4] = { cxSDHR_hi, cxSDHR_ctrl, (char)SDHRControls::RESET, 0 };
-	send(client_socket, _d, 4, 0);
+	packet.addr = cxSDHR_ctrl;
+	packet.data = (uint8_t)SDHRControls::RESET;
+	send(client_socket, (char*)&packet, 4, 0);
 }
 
 void SDHRCommandBatcher::SDHR_Process()
 {
 	// Always send 4 bytes: the address (0xC0B0 for ctrl or 0xC0B1 for data), the data byte, and a pad byte
-	char _d[4] = { cxSDHR_hi, cxSDHR_data, 0, 0 };
+	packet.addr = cxSDHR_data;
 	for (auto& cmd : v_cmds)
 	{
 		// Send all the data
 		for (auto& datab : cmd->v_data)
 		{
-			_d[3] = datab;
-			send(client_socket, _d, 4, 0);
+			packet.data = datab;
+			send(client_socket, (char*)&packet, 4, 0);
 		}
 	}
 	// Now send the control command
-	_d[2] = cxSDHR_ctrl;
-	_d[3] = (char)SDHRControls::PROCESS;
-	send(client_socket, _d, 4, 0);
+	packet.addr = cxSDHR_ctrl;
+	packet.data = (uint8_t)SDHRControls::PROCESS;
+	send(client_socket, (char*)&packet, 4, 0);
 }
 
 void SDHRCommandBatcher::AddCommand(SDHRCommand* command)

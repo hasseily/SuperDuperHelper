@@ -6,9 +6,8 @@
 #include <WinSock2.h>
 #include <ws2tcpip.h>
 
-static char cxSDHR_hi = 0xC0;		// SDHR High byte of 0xC0B.
-static char cxSDHR_ctrl = 0xB0;	// SDHR Low byte of 0xC0B. command
-static char cxSDHR_data = 0xB1;	// SDHR Low byte of 0xC01. data
+static uint16_t cxSDHR_ctrl = 0xC0B0;	// SDHR command
+static uint16_t cxSDHR_data = 0xC0B1;	// SDHR data
 
 enum class SDHRControls
 {
@@ -41,6 +40,17 @@ enum class SDHR_CMD {
 	UPDATE_WINDOW_SET_UPLOAD = 16,
 };
 
+#pragma pack(push)
+#pragma pack(1)
+
+struct BusPacket {
+	uint16_t addr;
+	uint8_t data;
+	uint8_t pad;
+};
+
+#pragma pop()
+
 class SDHRCommand;	// forward declaration
 
 /**
@@ -69,6 +79,7 @@ private:
 	std::vector<SDHRCommand*> v_cmds;
 	SOCKET client_socket = NULL;
 	sockaddr_in server_addr = { 0 };
+	BusPacket packet = { 0 };
 };
 
 /**
