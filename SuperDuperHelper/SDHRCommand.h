@@ -57,7 +57,7 @@ public:
 	void SDHR_Off();
 	void SDHR_Reset();
 	// Publishes the queued commands.
-	void SDHR_process();
+	void SDHR_Process();
 
 private:
 	std::vector<SDHRCommand*> v_cmds;

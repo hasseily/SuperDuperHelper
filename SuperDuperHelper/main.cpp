@@ -458,7 +458,7 @@ int main(int, char**)
                 auto w_enable2_cmd = SDHRCommand_UpdateWindowEnable(&w_enable2);
                 batcher.AddCommand(&w_enable2_cmd);
 
-                batcher.SDHR_process();
+                batcher.SDHR_Process();
             }
 
             UpdateWindowAdjustWindowViewCmd scWP;
@@ -498,7 +498,7 @@ int main(int, char**)
                     scWP.tile_ybegin = tile_posy;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
-                    batcher.SDHR_process();
+                    batcher.SDHR_Process();
                 }
             }
             if (ImGui::Button("South"))
@@ -509,7 +509,7 @@ int main(int, char**)
                     scWP.tile_ybegin = tile_posy;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
-                    batcher.SDHR_process();
+                    batcher.SDHR_Process();
                 }
             }
             if (ImGui::Button("East"))
@@ -520,7 +520,7 @@ int main(int, char**)
                     scWP.tile_xbegin = tile_posx;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
-                    batcher.SDHR_process();
+                    batcher.SDHR_Process();
                 }
             }
             if (ImGui::Button("West"))
@@ -531,7 +531,7 @@ int main(int, char**)
                     scWP.tile_xbegin = tile_posx;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
-                    batcher.SDHR_process();
+                    batcher.SDHR_Process();
                 }
             }
 
@@ -617,7 +617,7 @@ int main(int, char**)
                     _udc.filename = data_filename.c_str();
 					auto _cmd = SDHRCommand_UploadDataFilename(&_udc);
 					batcher.AddCommand(&_cmd);
-					batcher.SDHR_process();
+					batcher.SDHR_Process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Image Asset 0"))
@@ -653,7 +653,7 @@ int main(int, char**)
 					_udc.filename = image0_filename.c_str();
 					auto _cmd = SDHRCommand_DefineImageAssetFilename(&_udc);
 					batcher.AddCommand(&_cmd);
-					batcher.SDHR_process();
+					batcher.SDHR_Process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Image Asset 1"))
@@ -690,7 +690,7 @@ int main(int, char**)
 					_udc.filename = image1_filename.c_str();
 					auto _cmd = SDHRCommand_DefineImageAssetFilename(&_udc);
 					batcher.AddCommand(&_cmd);
-					batcher.SDHR_process();
+					batcher.SDHR_Process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Tileset 0"))
@@ -733,7 +733,7 @@ int main(int, char**)
 					_udc.data = (uint8_t*)set_addresses.data();
 					auto _cmd = SDHRCommand_DefineTilesetImmediate(&_udc);
 					batcher.AddCommand(&_cmd);
-					batcher.SDHR_process();
+					batcher.SDHR_Process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Tileset 1"))
@@ -776,7 +776,7 @@ int main(int, char**)
 					_udc.data = (uint8_t*)set_addresses.data();
 					auto _cmd = SDHRCommand_DefineTilesetImmediate(&_udc);
 					batcher.AddCommand(&_cmd);
-					batcher.SDHR_process();
+					batcher.SDHR_Process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Window 0"))
@@ -833,7 +833,7 @@ int main(int, char**)
 					w_enable.enabled = true;
 					auto w_enable_cmd = SDHRCommand_UpdateWindowEnable(&w_enable);
 					batcher.AddCommand(&w_enable_cmd);
-					batcher.SDHR_process();
+					batcher.SDHR_Process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Window 1"))
@@ -891,7 +891,7 @@ int main(int, char**)
 					w_enable.enabled = true;
 					auto w_enable_cmd = SDHRCommand_UpdateWindowEnable(&w_enable);
 					batcher.AddCommand(&w_enable_cmd);
-					batcher.SDHR_process();
+					batcher.SDHR_Process();
 				}
 			}
 			ImGui::SeparatorText("Window Commands - Applied on a window index");
@@ -921,7 +921,7 @@ int main(int, char**)
 					w_enable.enabled = _bState - 1;
 					auto w_enable_cmd = SDHRCommand_UpdateWindowEnable(&w_enable);
 					batcher.AddCommand(&w_enable_cmd);
-					batcher.SDHR_process();
+					batcher.SDHR_Process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Update Window: Set Upload"))
@@ -953,7 +953,7 @@ int main(int, char**)
 					_wcmd.upload_addr_high = _uwsu_addr_high;
 					auto w_enable_cmd = SDHRCommand_UpdateWindowSetUpload(&_wcmd);
 					batcher.AddCommand(&w_enable_cmd);
-					batcher.SDHR_process();
+					batcher.SDHR_Process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Update Window: Single Tileset"))
@@ -992,7 +992,7 @@ int main(int, char**)
 					_wcmd.data = _uwst_data2;
 					auto w_enable_cmd = SDHRCommand_UpdateWindowSingleTileset(&_wcmd);
 					batcher.AddCommand(&w_enable_cmd);
-					batcher.SDHR_process();
+					batcher.SDHR_Process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Update Window: Set Both"))
@@ -1031,7 +1031,7 @@ int main(int, char**)
 					_wcmd.data = _uwsb_data2;
 					auto w_updateb_cmd = SDHRCommand_UpdateWindowSetBoth(&_wcmd);
 					batcher.AddCommand(&w_updateb_cmd);
-					batcher.SDHR_process();
+					batcher.SDHR_Process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Update Window: Shift Tiles"))

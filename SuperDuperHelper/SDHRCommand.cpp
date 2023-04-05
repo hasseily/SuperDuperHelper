@@ -45,7 +45,7 @@ void SDHRCommandBatcher::SDHR_Reset()
 	send(client_fd, _d, 4, 0);
 }
 
-void SDHRCommandBatcher::SDHR_process()
+void SDHRCommandBatcher::SDHR_Process()
 {
 	// Always send 4 bytes: the address (0xC0B0 for ctrl or 0xC0B1 for data), the data byte, and a pad byte
 	char _d[4] = { cxSDHR_hi, cxSDHR_data, 0, 0 };
