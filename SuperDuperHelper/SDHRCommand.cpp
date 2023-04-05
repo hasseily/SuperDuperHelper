@@ -1,48 +1,58 @@
 #include "SDHRCommand.h"
-#include <stdint.h>
-#include <iostream>
-#include <winsock2.h>
 
-
-extern std::string server_ip;
-extern int server_port;
-
-SDHRCommandBatcher::SDHRCommandBatcher()
+SDHRCommandBatcher::SDHRCommandBatcher(std::string server_ip, int server_port)
 {
+	WSADATA wsaData;
+	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (result != 0) {
+		std::cerr << "WSAStartup failed: " << result << std::endl;
+		isConnected = false;
+		return;
+	}
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(server_port);
 	server_addr.sin_addr.s_addr = inet_addr(server_ip.c_str());
 	memset(&(server_addr.sin_zero), '\0', 8);
 
-	if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		std::cerr << "Error creating socket" << std::endl;
+	client_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (client_socket == INVALID_SOCKET) {
+		std::cerr << "Error creating socket: " << WSAGetLastError() << std::endl;
+		WSACleanup();
+		isConnected = false;
+		return;
 	}
-	if (connect(client_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
-		std::cerr << "Error connecting to server" << std::endl;
+	if (connect(client_socket, (sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
+		std::cerr << "Error connecting to server: " << WSAGetLastError() << std::endl;
+		closesocket(client_socket);
+		WSACleanup();
+		isConnected = false;
+		return;
 	}
+	isConnected = true;
 }
 
 SDHRCommandBatcher::~SDHRCommandBatcher()
 {
-	closesocket(client_fd);
+	closesocket(client_socket);
+	WSACleanup();
 }
 
 void SDHRCommandBatcher::SDHR_On()
 {
 	char _d[4] = { cxSDHR_hi, cxSDHR_ctrl, (char)SDHRControls::ENABLE, 0 };
-	send(client_fd, _d, 4, 0);
+	send(client_socket, _d, 4, 0);
 }
 
 void SDHRCommandBatcher::SDHR_Off()
 {
 	char _d[4] = { cxSDHR_hi, cxSDHR_ctrl, (char)SDHRControls::DISABLE, 0 };
-	send(client_fd, _d, 4, 0);
+	send(client_socket, _d, 4, 0);
 }
 
 void SDHRCommandBatcher::SDHR_Reset()
 {
 	char _d[4] = { cxSDHR_hi, cxSDHR_ctrl, (char)SDHRControls::RESET, 0 };
-	send(client_fd, _d, 4, 0);
+	send(client_socket, _d, 4, 0);
 }
 
 void SDHRCommandBatcher::SDHR_Process()
@@ -55,13 +65,13 @@ void SDHRCommandBatcher::SDHR_Process()
 		for (auto& datab : cmd->v_data)
 		{
 			_d[3] = datab;
-			send(client_fd, _d, 4, 0);
+			send(client_socket, _d, 4, 0);
 		}
 	}
 	// Now send the control command
 	_d[2] = cxSDHR_ctrl;
 	_d[3] = (char)SDHRControls::PROCESS;
-	send(client_fd, _d, 4, 0);
+	send(client_socket, _d, 4, 0);
 }
 
 void SDHRCommandBatcher::AddCommand(SDHRCommand* command)

@@ -3,6 +3,7 @@
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
+#define WIN32_LEAN_AND_MEAN
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
@@ -31,6 +32,7 @@
 #include <map>
 
 #include "SDHRCommand.h"
+#pragma comment(lib, "ws2_32.lib")
 
 std::map<int, bool> keyboard; // Saves the state(true=pressed; false=released) of each SDL_Key.
 
@@ -153,7 +155,7 @@ int main(int, char**)
 
     std::string asset_name = ini["Assets"]["Dialog1"];  // TODO: Remove
     {
-		bool ret = ImageHelper::LoadTextureFromFile(asset_name.c_str(), &my_image_texture, &my_image_width, &my_image_height);
+		ImageHelper::LoadTextureFromFile(asset_name.c_str(), &my_image_texture, &my_image_width, &my_image_height);
     }
 
     std::string data_filename = ini["Data"]["Data_filename"];
@@ -316,7 +318,7 @@ int main(int, char**)
 
             if (ImGui::Checkbox("Enable SuperDuperHiRes (SDHR)", &activate_sdhr))
             {
-				auto batcher = SDHRCommandBatcher();
+				auto batcher = SDHRCommandBatcher(server_ip, server_port);
                 if (activate_sdhr)
                 {
                     batcher.SDHR_On();
@@ -345,10 +347,10 @@ int main(int, char**)
                 //    f.put(brit_lookup()[britannia_tiles[i]]);
                 //}
                 //f.close();
-                auto batcher = SDHRCommandBatcher();
+                auto batcher = SDHRCommandBatcher(server_ip, server_port);
 
 				std::filesystem::path asset_path = "Assets/Tiles_Ultima5.png";
-				std::string asset_name = std::filesystem::absolute(asset_path).string();
+				asset_name = std::filesystem::absolute(asset_path).string();
                 DefineImageAssetFilenameCmd asset_cmd;
                 asset_cmd.asset_index = 0;
                 asset_cmd.filename_length = asset_name.length();
@@ -478,7 +480,7 @@ int main(int, char**)
    //                 int64_t tile_ybegin;
    //             };
    //             scWP.screen_xbegin = sprite_pos_abs_h;
-			//	auto batcher = SDHRCommandBatcher();
+			//	auto batcher = SDHRCommandBatcher(server_ip, server_port);
 			//	auto c1 = SDHRCommand_UpdateWindowSetWindowPosition(&scWP);
 			//	batcher.AddCommand(&c1);
 			//	batcher.SDHR_process();
@@ -487,7 +489,7 @@ int main(int, char**)
 			//if (ImGui::SliderInt("Move Sprite Vertical", &sprite_pos_abs_v, 0, 360))
 			//{
 			//	scWP.screen_ybegin = sprite_pos_abs_v;
-			//	auto batcher = SDHRCommandBatcher();
+			//	auto batcher = SDHRCommandBatcher(server_ip, server_port);
 			//	auto c1 = SDHRCommand_UpdateWindowSetWindowPosition(&scWP);
 			//	batcher.AddCommand(&c1);
 			//	batcher.SDHR_process();
@@ -496,7 +498,7 @@ int main(int, char**)
             if (ImGui::Button("North"))
             {
                 for (auto i = 0; i < 8; ++i) {
-                    auto batcher = SDHRCommandBatcher();
+                    auto batcher = SDHRCommandBatcher(server_ip, server_port);
                     tile_posy -= 2;
                     scWP.tile_ybegin = tile_posy;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
@@ -507,7 +509,7 @@ int main(int, char**)
             if (ImGui::Button("South"))
             {
                 for (auto i = 0; i < 8; ++i) {
-                    auto batcher = SDHRCommandBatcher();
+                    auto batcher = SDHRCommandBatcher(server_ip, server_port);
                     tile_posy += 2;
                     scWP.tile_ybegin = tile_posy;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
@@ -518,7 +520,7 @@ int main(int, char**)
             if (ImGui::Button("East"))
             {
                 for (auto i = 0; i < 8; ++i) {
-                    auto batcher = SDHRCommandBatcher();
+                    auto batcher = SDHRCommandBatcher(server_ip, server_port);
                     tile_posx += 2;
                     scWP.tile_xbegin = tile_posx;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
@@ -529,7 +531,7 @@ int main(int, char**)
             if (ImGui::Button("West"))
             {
                 for (auto i = 0; i < 8; ++i) {
-                    auto batcher = SDHRCommandBatcher();
+                    auto batcher = SDHRCommandBatcher(server_ip, server_port);
                     tile_posx -= 2;
                     scWP.tile_xbegin = tile_posx;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
@@ -540,7 +542,7 @@ int main(int, char**)
 
 			if (ImGui::Button("Reset"))
 			{
-				auto batcher = SDHRCommandBatcher();
+				auto batcher = SDHRCommandBatcher(server_ip, server_port);
 				batcher.SDHR_Reset();
 			}
 
@@ -555,7 +557,7 @@ int main(int, char**)
 				{
 					asset_name = instance_a.GetFilePathName();
 					std::string filePath = instance_a.GetCurrentPath();
-					bool ret = ImageHelper::LoadTextureFromFile(asset_name.c_str(), &my_image_texture, &my_image_width, &my_image_height);
+					ImageHelper::LoadTextureFromFile(asset_name.c_str(), &my_image_texture, &my_image_width, &my_image_height);
                     ini["Assets"]["Dialog1"] = asset_name;
                     file.write(ini);
                     show_tileset_window = true;
@@ -612,7 +614,7 @@ int main(int, char**)
 					ini["Data"]["Data_dest_addr_high"] = data_dest_addr_high;
 					ini["Data"]["Data_filename"] = data_filename;
 					file.write(ini);
-					auto batcher = SDHRCommandBatcher();
+					auto batcher = SDHRCommandBatcher(server_ip, server_port);
                     UploadDataFilenameCmd _udc;
                     _udc.dest_addr_med = (uint8_t)data_dest_addr_med;
 					_udc.dest_addr_high = (uint8_t)data_dest_addr_high;
@@ -649,7 +651,7 @@ int main(int, char**)
 					ini["Image"]["Image0_asset_index"] = image0_asset_index;
 					ini["Image"]["Image0_filename"] = image0_filename;
 					file.write(ini);
-					auto batcher = SDHRCommandBatcher();
+					auto batcher = SDHRCommandBatcher(server_ip, server_port);
 					DefineImageAssetFilenameCmd _udc;
 					_udc.asset_index = (uint8_t)image0_asset_index;
 					_udc.filename_length = (uint8_t)image0_filename.length();
@@ -686,7 +688,7 @@ int main(int, char**)
 					ini["Image"]["Image1_asset_index"] = image1_asset_index;
 					ini["Image"]["Image1_filename"] = image1_filename;
 					file.write(ini);
-					auto batcher = SDHRCommandBatcher();
+					auto batcher = SDHRCommandBatcher(server_ip, server_port);
 					DefineImageAssetFilenameCmd _udc;
 					_udc.asset_index = (uint8_t)image0_asset_index;
 					_udc.filename_length = (uint8_t)image1_filename.length();
@@ -719,7 +721,7 @@ int main(int, char**)
 					ini["Tileset"]["Tileset0_xdim"] = tileset0_xdim;
 					ini["Tileset"]["Tileset0_ydim"] = tileset0_ydim;
 					file.write(ini);
-					auto batcher = SDHRCommandBatcher();
+					auto batcher = SDHRCommandBatcher(server_ip, server_port);
                     DefineTilesetImmediateCmd _udc;
 					_udc.tileset_index = (uint8_t)tileset0_index;
 					_udc.num_entries = (uint8_t)tileset0_num_entries;   // 256 becomes 0
@@ -762,7 +764,7 @@ int main(int, char**)
 					ini["Tileset"]["Tileset0_xdim"] = tileset1_xdim;
 					ini["Tileset"]["Tileset0_ydim"] = tileset1_ydim;
 					file.write(ini);
-					auto batcher = SDHRCommandBatcher();
+					auto batcher = SDHRCommandBatcher(server_ip, server_port);
 					DefineTilesetImmediateCmd _udc;
 					_udc.tileset_index = (uint8_t)tileset1_index;
 					_udc.num_entries = (uint8_t)tileset1_num_entries;   // 256 becomes 0
@@ -814,7 +816,7 @@ int main(int, char**)
 					ini["Window"]["Window0_tile_xcount"] = window0_tile_xcount;
 					ini["Window"]["Window0_tile_ycount"] = window0_tile_ycount;
 					file.write(ini);
-					auto batcher = SDHRCommandBatcher();
+					auto batcher = SDHRCommandBatcher(server_ip, server_port);
                     DefineWindowCmd _udc;
 					_udc.window_index = window0_index;
 					_udc.black_or_wrap = window0_black_or_wrap;
@@ -872,7 +874,7 @@ int main(int, char**)
 					ini["Window"]["Window1_tile_xcount"] = window1_tile_xcount;
 					ini["Window"]["Window1_tile_ycount"] = window1_tile_ycount;
 					file.write(ini);
-					auto batcher = SDHRCommandBatcher();
+					auto batcher = SDHRCommandBatcher(server_ip, server_port);
 					DefineWindowCmd _udc;
 					_udc.window_index = window1_index;
 					_udc.black_or_wrap = window1_black_or_wrap;
@@ -918,7 +920,7 @@ int main(int, char**)
 				}
 				if (_bState > 0)
 				{
-					auto batcher = SDHRCommandBatcher();
+					auto batcher = SDHRCommandBatcher(server_ip, server_port);
 					UpdateWindowEnableCmd w_enable;
 					w_enable.window_index = _vWindowIndex;
 					w_enable.enabled = _bState - 1;
@@ -945,7 +947,7 @@ int main(int, char**)
 				ImGui::SliderInt("High Byte##uwsu", &_uwsu_addr_high, 0, 255);
 				if (ImGui::Button("Update##uwsu"))
 				{
-					auto batcher = SDHRCommandBatcher();
+					auto batcher = SDHRCommandBatcher(server_ip, server_port);
 					UpdateWindowSetUploadCmd _wcmd;
 					_wcmd.window_index = _vWindowIndex;
 					_wcmd.tile_xbegin = _uwsu_tile_xbegin;
@@ -979,7 +981,7 @@ int main(int, char**)
 				ImGui::InputInt4("Data##uwst", _uwst_data);
 				if (ImGui::Button("Update##uwst"))
 				{
-					auto batcher = SDHRCommandBatcher();
+					auto batcher = SDHRCommandBatcher(server_ip, server_port);
 					UpdateWindowSingleTilesetCmd _wcmd;
 					_wcmd.window_index = _vWindowIndex;
 					_wcmd.tile_xbegin = _uwst_tile_xbegin;
@@ -1018,7 +1020,7 @@ int main(int, char**)
 				ImGui::InputInt4("Index##uwsb", _uwsb_data);
 				if (ImGui::Button("Update##uwsb"))
 				{
-					auto batcher = SDHRCommandBatcher();
+					auto batcher = SDHRCommandBatcher(server_ip, server_port);
 					UpdateWindowSetBothCmd _wcmd;
 					_wcmd.window_index = _vWindowIndex;
 					_wcmd.tile_xbegin = _uwsb_tile_xbegin;
@@ -1045,14 +1047,14 @@ int main(int, char**)
 				ImGui::SliderInt("Shift X##uwshift", &_uwshift_y, -127, 127);
 				if (ImGui::Button("Shift Tiles##uwshift"))
 				{
-					auto batcher = SDHRCommandBatcher();
+					auto batcher = SDHRCommandBatcher(server_ip, server_port);
 					UpdateWindowShiftTilesCmd _wcmd;
 					_wcmd.window_index = _vWindowIndex;
 					_wcmd.x_dir = _uwshift_x;
 					_wcmd.y_dir = _uwshift_y;
 					auto w_updateb_cmd = SDHRCommand_UpdateWindowShiftTiles(&_wcmd);
 					batcher.AddCommand(&w_updateb_cmd);
-					batcher.Publish();
+					batcher.SDHR_Process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Update Window: Set Window Position"))
@@ -1065,14 +1067,14 @@ int main(int, char**)
 				ImGui::PopItemWidth();
 				if (ImGui::Button("Set Window Position##uwsetwin"))
 				{
-					auto batcher = SDHRCommandBatcher();
+					auto batcher = SDHRCommandBatcher(server_ip, server_port);
 					UpdateWindowSetWindowPositionCmd _wcmd;
 					_wcmd.window_index = _vWindowIndex;
 					_wcmd.screen_xbegin = _uwsetwin_x;
 					_wcmd.screen_ybegin = _uwsetwin_y;
 					auto w_updateb_cmd = SDHRCommand_UpdateWindowSetWindowPosition(&_wcmd);
 					batcher.AddCommand(&w_updateb_cmd);
-					batcher.Publish();
+					batcher.SDHR_Process();
 				}
 			}
 			if (ImGui::CollapsingHeader("Update Window: Adjust Window View"))
@@ -1085,14 +1087,14 @@ int main(int, char**)
 				ImGui::PopItemWidth();
 				if (ImGui::Button("Adjust Window View##uwadjview"))
 				{
-					auto batcher = SDHRCommandBatcher();
+					auto batcher = SDHRCommandBatcher(server_ip, server_port);
 					UpdateWindowAdjustWindowViewCmd _wcmd;
 					_wcmd.window_index = _vWindowIndex;
 					_wcmd.tile_xbegin = _uwadjview_x;
 					_wcmd.tile_ybegin = _uwadjview_y;
 					auto w_updateb_cmd = SDHRCommand_UpdateWindowAdjustWindowView(&_wcmd);
 					batcher.AddCommand(&w_updateb_cmd);
-					batcher.Publish();
+					batcher.SDHR_Process();
 				}
 			}
             ImGui::End();

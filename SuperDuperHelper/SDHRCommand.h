@@ -1,11 +1,14 @@
 #pragma once
 #include <vector>
 #include <string>
-#include <ws2def.h>
+#include <stdint.h>
+#include <iostream>
+#include <WinSock2.h>
+#include <ws2tcpip.h>
 
-static unsigned char cxSDHR_hi = 0xC0;		// SDHR High byte of 0xC0B.
-static unsigned char cxSDHR_ctrl = 0xB0;	// SDHR Low byte of 0xC0B. command
-static unsigned char cxSDHR_data = 0xB1;	// SDHR Low byte of 0xC01. data
+static char cxSDHR_hi = 0xC0;		// SDHR High byte of 0xC0B.
+static char cxSDHR_ctrl = 0xB0;	// SDHR Low byte of 0xC0B. command
+static char cxSDHR_data = 0xB1;	// SDHR Low byte of 0xC01. data
 
 enum class SDHRControls
 {
@@ -48,6 +51,8 @@ class SDHRCommand;	// forward declaration
 class SDHRCommandBatcher
 {
 public:
+	SDHRCommandBatcher(std::string server_ip, int server_port);
+	~SDHRCommandBatcher();
 
 	// Stream of subcommands to add to the command
 	// They'll be processed in FIFO.
@@ -59,10 +64,11 @@ public:
 	// Publishes the queued commands.
 	void SDHR_Process();
 
+	bool isConnected = false;
 private:
 	std::vector<SDHRCommand*> v_cmds;
-	int client_fd;
-	sockaddr_in server_addr;
+	SOCKET client_socket = NULL;
+	sockaddr_in server_addr = { 0 };
 };
 
 /**
