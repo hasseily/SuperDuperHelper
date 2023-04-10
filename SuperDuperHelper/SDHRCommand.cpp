@@ -87,12 +87,11 @@ void SDHRCommandBatcher::AddCommand(SDHRCommand* command)
 
 void SDHRCommand::InsertSizeHeader()
 {
-	// OBSOLETE
-// 	uint16_t vSize = v_data.size() - 1;
-// 	uint8_t* p;
-// 	p = (uint8_t*)&vSize;
-// 	v_data.insert(v_data.begin(), p[1]);
-// 	v_data.insert(v_data.begin(), p[0]);
+	uint16_t vSize = v_data.size() - 1;
+	uint8_t* p;
+	p = (uint8_t*)&vSize;
+	v_data.insert(v_data.begin(), p[1]);
+	v_data.insert(v_data.begin(), p[0]);
 }
 
 SDHRCommand_UpdateWindowEnable::SDHRCommand_UpdateWindowEnable(UpdateWindowEnableCmd* cmd)
