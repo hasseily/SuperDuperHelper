@@ -1,5 +1,6 @@
 #include "SDHRCommand.h"
-
+#include <fstream>
+#include "ImGuiFileDialog/stb/stb_image.h"
 
 SDHRCommandBatcher::SDHRCommandBatcher(std::string server_ip, int server_port)
 {
@@ -78,12 +79,20 @@ void SDHRCommandBatcher::SDHR_Process()
 	packet.addr = cxSDHR_ctrl;
 	packet.data = (uint8_t)SDHRControls::PROCESS;
 	send(client_socket, (char*)&packet, 4, 0);
+
+	v_cmds.clear();
 }
 
 void SDHRCommandBatcher::AddCommand(SDHRCommand* command)
 {
 	v_cmds.push_back(command);
 }
+
+// Below are helper commands for loading local filesystem data
+
+//////////////////////////////////////////////////////////////////////////
+// SDHRCommand and subclasses
+//////////////////////////////////////////////////////////////////////////
 
 void SDHRCommand::InsertSizeHeader()
 {
@@ -165,17 +174,6 @@ SDHRCommand_UploadData::SDHRCommand_UploadData(UploadDataCmd* cmd)
 	InsertSizeHeader();
 }
 
-SDHRCommand_UploadDataFilename::SDHRCommand_UploadDataFilename(UploadDataFilenameCmd* cmd)
-{
-	id = SDHR_CMD::UPLOAD_DATA_FILENAME;
-	v_data.push_back((uint8_t)id);
-	v_data.push_back(cmd->dest_addr_med);
-	v_data.push_back(cmd->dest_addr_high);
-	v_data.push_back(cmd->filename_length);
-	// push the filename string (no trailing null)
-	for (size_t i = 0; i < cmd->filename_length; i++) { v_data.push_back(cmd->filename[i]); };
-	InsertSizeHeader();
-}
 
 SDHRCommand_DefineImageAsset::SDHRCommand_DefineImageAsset(DefineImageAssetCmd* cmd)
 {
@@ -186,16 +184,6 @@ SDHRCommand_DefineImageAsset::SDHRCommand_DefineImageAsset(DefineImageAssetCmd* 
 	InsertSizeHeader();
 }
 
-SDHRCommand_DefineImageAssetFilename::SDHRCommand_DefineImageAssetFilename(DefineImageAssetFilenameCmd* cmd)
-{
-	id = SDHR_CMD::DEFINE_IMAGE_ASSET_FILENAME;
-	v_data.push_back((uint8_t)id);
-	v_data.push_back(cmd->asset_index);
-	v_data.push_back(cmd->filename_length);
-	// push the filename string (no trailing null)
-	for (size_t i = 0; i < cmd->filename_length; i++) { v_data.push_back(cmd->filename[i]); };
-	InsertSizeHeader();
-}
 
 
 SDHRCommand_DefineTileset::SDHRCommand_DefineTileset(DefineTilesetCmd* cmd)

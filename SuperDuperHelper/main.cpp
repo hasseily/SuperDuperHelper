@@ -32,9 +32,135 @@
 #include <map>
 
 #include "SDHRCommand.h"
+#include "ImGuiFileDialog/stb/stb_image.h"
 #pragma comment(lib, "ws2_32.lib")
 
 std::map<int, bool> keyboard; // Saves the state(true=pressed; false=released) of each SDL_Key.
+
+// We're moving data one page (0x0100) at a time, and we're allowed to use the Apple 2's memory
+// from 0x0200 to 0xBFFF.
+#define APPLE2_MEM_LOW	 0x02	//	Lower bound (med byte) of Apple 2 memory allowed to use
+#define APPLE2_MEM_HIGH	 0xBF	//	Upper bound (med byte) of Apple 2 memory allowed to use
+
+static uint8_t UploadDataFilename(UploadDataFilenameCmd* cmd, const uint8_t source_addr_med,
+	SDHRCommandBatcher* b)
+{
+	if (cmd->filename_length == 0)
+		return 0;
+	if (source_addr_med < APPLE2_MEM_LOW)
+	{
+		std::cerr << "Apple 2 memory source address is too low!" << std::endl;
+		std::cerr << std::hex << source_addr_med << std::endl;
+		return 0;
+	}
+	if (source_addr_med >= APPLE2_MEM_HIGH)
+	{
+		std::cerr << "Apple 2 memory source address is too high!" << std::endl;
+		return 0;
+	}
+	std::string filename(cmd->filename, cmd->filename + cmd->filename_length);
+	std::ifstream f(filename.c_str(), std::ios::binary | std::ios::ate);
+
+	UploadDataCmd upCmd;
+	upCmd.source_addr_med = source_addr_med;
+	upCmd.upload_addr_med = 0;
+	upCmd.upload_addr_high = 0;
+	upCmd.num_256b_pages = 1;	// upload 1 256b page at a time
+
+	uint16_t memaddr = upCmd.source_addr_med << 8;
+
+	f.seekg(0, std::ios::beg);
+	char fval;
+	uint64_t bytes_read = 0;
+	uint8_t num_256b_pages = 0;
+	b->packet.pad = 0;
+	while (!f.eof())
+	{
+		if (bytes_read % 256 == 0)
+		{
+			if (num_256b_pages > 0)
+			{
+				// send each page one at a time
+				upCmd.source_addr_med = source_addr_med;
+				upCmd.upload_addr_med = (uint8_t)(bytes_read >> 8);
+				upCmd.upload_addr_high = (uint8_t)(bytes_read >> 16);
+				memaddr = upCmd.source_addr_med << 8;
+				auto up_cmd = SDHRCommand_UploadData(&upCmd);
+				b->AddCommand(&up_cmd);
+				b->SDHR_Process();
+			}
+			++num_256b_pages;
+		}
+		// Send the file through the network one byte at a time,
+		// as if it were the Apple 2 card bus
+		f.read(&fval, sizeof(char));
+		b->packet.addr = memaddr++;
+		b->packet.data = fval;
+		send(b->client_socket, (char*)&b->packet, 4, 0);
+		++bytes_read;
+	}
+	// Fill the rest of the page with 0s
+	while (bytes_read % 256 > 0)
+	{
+		BusPacket bp;
+		b->packet.addr = memaddr++;
+		bp.data = 0;
+		send(b->client_socket, (char*)&b->packet, 4, 0);
+		++bytes_read;
+	}
+	// Send the last page
+	upCmd.source_addr_med = source_addr_med;
+	upCmd.upload_addr_med = (uint8_t)(bytes_read >> 8);
+	upCmd.upload_addr_high = (uint8_t)(bytes_read >> 16);
+	memaddr = upCmd.source_addr_med << 8;
+	auto up_cmd = SDHRCommand_UploadData(&upCmd);
+	b->AddCommand(&up_cmd);
+	b->SDHR_Process();
+	return num_256b_pages;
+}
+
+static void UploadImageFilename(DefineImageAssetFilenameCmd* cmd, const uint8_t source_addr_med,
+	const std::string server_ip, const int server_port)
+{
+	if (cmd->filename_length == 0)
+		return;
+	if (source_addr_med < APPLE2_MEM_LOW)
+	{
+		std::cerr << "Apple 2 memory source address is too low!" << std::endl;
+		std::cerr << std::hex << source_addr_med << std::endl;
+		return;
+	}
+	if (source_addr_med >= APPLE2_MEM_HIGH)
+	{
+		std::cerr << "Apple 2 memory source address is too high!" << std::endl;
+		return;
+	}
+	// WARNING: The filename upload stuff doesn't exist on the server.
+// Load the file in memory, and send Apple 2 memory write packets.
+// It's up to the caller to process the UploadDataCmd
+	UploadDataFilenameCmd upfcmd;
+	upfcmd.filename = cmd->filename;
+	upfcmd.filename_length = cmd->filename_length;
+	upfcmd.upload_addr_med = 0;
+	upfcmd.upload_addr_high = 0;
+	auto b = SDHRCommandBatcher(server_ip, server_port);
+
+	uint8_t num_256b_pages = UploadDataFilename(&upfcmd, source_addr_med, &b);
+	if (num_256b_pages == 0)
+		return;
+
+	// And now tell the SDHR graphics processor that the file uploaded
+	// at 0, with page count num_256b_pages is and image with a specific asset index 
+	DefineImageAssetCmd asset_cmd;
+	asset_cmd.asset_index = cmd->asset_index;
+	asset_cmd.upload_addr_med = 0;
+	asset_cmd.upload_addr_high = 0;
+	asset_cmd.upload_page_count = num_256b_pages;
+	auto assetc = SDHRCommand_DefineImageAsset(&asset_cmd);
+	b.AddCommand(&assetc);
+	b.SDHR_Process();
+}
+
 
 // Main code
 int main(int, char**)
@@ -347,26 +473,28 @@ int main(int, char**)
                 //    f.put(brit_lookup()[britannia_tiles[i]]);
                 //}
                 //f.close();
-                auto batcher = SDHRCommandBatcher(server_ip, server_port);
 
+				// Load an image using the UploadImageFilename() helper
 				std::filesystem::path asset_path = "Assets/Tiles_Ultima5.png";
 				asset_name = std::filesystem::absolute(asset_path).string();
-                DefineImageAssetFilenameCmd asset_cmd;
-                asset_cmd.asset_index = 0;
-                asset_cmd.filename_length = asset_name.length();
-                asset_cmd.filename = asset_name.c_str();
-                auto assetc = SDHRCommand_DefineImageAssetFilename(&asset_cmd);
-                batcher.AddCommand(&assetc);
+				DefineImageAssetFilenameCmd imgasset_cmd;
+				imgasset_cmd.asset_index = 0;
+				imgasset_cmd.filename_length = asset_name.length();
+				imgasset_cmd.filename = asset_name.c_str();
+				UploadImageFilename(&imgasset_cmd, 0x20, server_ip, server_port);
 
+				auto batcher = SDHRCommandBatcher(server_ip, server_port);
+
+				// Load an asset by just uploading the data
+				// This one loads at 0x00
 				std::filesystem::path tilepath = "Assets/britannia.dat";
                 std::string tilefile = std::filesystem::absolute(tilepath).string();
-                UploadDataFilenameCmd upload_tiles;
-                upload_tiles.dest_addr_med = 0;
-                upload_tiles.dest_addr_high = 0;
-                upload_tiles.filename_length = tilefile.length();
-                upload_tiles.filename = tilefile.c_str();
-                auto upload_tiles_cmd = SDHRCommand_UploadDataFilename(&upload_tiles);
-                batcher.AddCommand(&upload_tiles_cmd);
+                UploadDataFilenameCmd upload_tilesf;
+                upload_tilesf.upload_addr_med = 0;
+                upload_tilesf.upload_addr_high = 0;
+                upload_tilesf.filename_length = tilefile.length();
+                upload_tilesf.filename = tilefile.c_str();
+				UploadDataFilename(&upload_tilesf, APPLE2_MEM_LOW, &batcher);
 
                 std::vector<uint16_t> set1_addresses;
                 std::vector<uint16_t> set2_addresses;
@@ -616,13 +744,11 @@ int main(int, char**)
 					file.write(ini);
 					auto batcher = SDHRCommandBatcher(server_ip, server_port);
                     UploadDataFilenameCmd _udc;
-                    _udc.dest_addr_med = (uint8_t)data_dest_addr_med;
-					_udc.dest_addr_high = (uint8_t)data_dest_addr_high;
+                    _udc.upload_addr_med = (uint8_t)data_dest_addr_med;
+					_udc.upload_addr_high = (uint8_t)data_dest_addr_high;
                     _udc.filename_length = (uint8_t)data_filename.length();
                     _udc.filename = data_filename.c_str();
-					auto _cmd = SDHRCommand_UploadDataFilename(&_udc);
-					batcher.AddCommand(&_cmd);
-					batcher.SDHR_Process();
+					UploadDataFilename(&_udc, APPLE2_MEM_LOW, &batcher);
 				}
 			}
 			if (ImGui::CollapsingHeader("Image Asset 0"))
@@ -651,14 +777,11 @@ int main(int, char**)
 					ini["Image"]["Image0_asset_index"] = image0_asset_index;
 					ini["Image"]["Image0_filename"] = image0_filename;
 					file.write(ini);
-					auto batcher = SDHRCommandBatcher(server_ip, server_port);
-					DefineImageAssetFilenameCmd _udc;
-					_udc.asset_index = (uint8_t)image0_asset_index;
-					_udc.filename_length = (uint8_t)image0_filename.length();
-					_udc.filename = image0_filename.c_str();
-					auto _cmd = SDHRCommand_DefineImageAssetFilename(&_udc);
-					batcher.AddCommand(&_cmd);
-					batcher.SDHR_Process();
+					DefineImageAssetFilenameCmd img0asset_cmd;
+					img0asset_cmd.asset_index = image0_asset_index;
+					img0asset_cmd.filename_length = image0_filename.length();
+					img0asset_cmd.filename = image0_filename.c_str();
+					UploadImageFilename(&img0asset_cmd, 0x20, server_ip, server_port);
 				}
 			}
 			if (ImGui::CollapsingHeader("Image Asset 1"))
@@ -688,14 +811,11 @@ int main(int, char**)
 					ini["Image"]["Image1_asset_index"] = image1_asset_index;
 					ini["Image"]["Image1_filename"] = image1_filename;
 					file.write(ini);
-					auto batcher = SDHRCommandBatcher(server_ip, server_port);
-					DefineImageAssetFilenameCmd _udc;
-					_udc.asset_index = (uint8_t)image0_asset_index;
-					_udc.filename_length = (uint8_t)image1_filename.length();
-					_udc.filename = image1_filename.c_str();
-					auto _cmd = SDHRCommand_DefineImageAssetFilename(&_udc);
-					batcher.AddCommand(&_cmd);
-					batcher.SDHR_Process();
+					DefineImageAssetFilenameCmd img1asset_cmd;
+					img1asset_cmd.asset_index = image1_asset_index;
+					img1asset_cmd.filename_length = image1_filename.length();
+					img1asset_cmd.filename = image1_filename.c_str();
+					UploadImageFilename(&img1asset_cmd, 0x20, server_ip, server_port);
 				}
 			}
 			if (ImGui::CollapsingHeader("Tileset 0"))
@@ -1044,7 +1164,7 @@ int main(int, char**)
 				static int _uwshift_x = 0;
 				static int _uwshift_y = 0;
 				ImGui::SliderInt("Shift X##uwshift", &_uwshift_x, -127, 127);
-				ImGui::SliderInt("Shift X##uwshift", &_uwshift_y, -127, 127);
+				ImGui::SliderInt("Shift Y##uwshift", &_uwshift_y, -127, 127);
 				if (ImGui::Button("Shift Tiles##uwshift"))
 				{
 					auto batcher = SDHRCommandBatcher(server_ip, server_port);

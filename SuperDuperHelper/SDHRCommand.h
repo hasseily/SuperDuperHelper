@@ -24,7 +24,7 @@ enum class SDHR_CMD {
 	NONE = 0,
 	UPLOAD_DATA = 1,
 	DEFINE_IMAGE_ASSET = 2,
-	DEFINE_IMAGE_ASSET_FILENAME = 3,
+	DEFINE_IMAGE_ASSET_FILENAME = 3,			// NOT IMPLEMENTED ANY MORE
 	DEFINE_TILESET = 4,
 	DEFINE_TILESET_IMMEDIATE = 5,
 	DEFINE_WINDOW = 6,
@@ -36,7 +36,7 @@ enum class SDHR_CMD {
 	UPDATE_WINDOW_SET_BITMASKS = 12,
 	UPDATE_WINDOW_ENABLE = 13,
 	READY = 14,
-	UPLOAD_DATA_FILENAME = 15,
+	UPLOAD_DATA_FILENAME = 15,					// NOT IMPLEMENTED ANY MORE
 	UPDATE_WINDOW_SET_UPLOAD = 16,
 };
 
@@ -49,37 +49,21 @@ struct BusPacket {
 	uint8_t pad;
 };
 
-#pragma pop()
-
-class SDHRCommand;	// forward declaration
-
 /**
- * @brief SDHRCommandBatcher
- * Writes the complete command batch to SHM along with a SDHR_CMD_READY flag
- * Call GameLink::SDHR_process() to have AppleWin process them
+ * @brief Structs for wrapper commands
 */
-class SDHRCommandBatcher
-{
-public:
-	SDHRCommandBatcher(std::string server_ip, int server_port);
-	~SDHRCommandBatcher();
 
-	// Stream of subcommands to add to the command
-	// They'll be processed in FIFO.
-	void AddCommand(SDHRCommand* command);
+struct UploadDataFilenameCmd {
+	uint8_t upload_addr_med;
+	uint8_t upload_addr_high;
+	uint8_t filename_length;
+	const char* filename;  // don't include the trailing null either in the data or counted in the filename_length
+};
 
-	void SDHR_On();
-	void SDHR_Off();
-	void SDHR_Reset();
-	// Publishes the queued commands.
-	void SDHR_Process();
-
-	bool isConnected = false;
-private:
-	std::vector<SDHRCommand*> v_cmds;
-	SOCKET client_socket = NULL;
-	sockaddr_in server_addr = { 0 };
-	BusPacket packet = { 0 };
+struct DefineImageAssetFilenameCmd {
+	uint8_t asset_index;
+	uint8_t filename_length;
+	const char* filename;  // don't include the trailing null either in the data or counted in the filename_length
 };
 
 /**
@@ -87,21 +71,11 @@ private:
  * Use these command structs to pass to the SDHRCommand functions
  */
 
-#pragma pack(push)
-#pragma pack(1)
-
 struct UploadDataCmd {
-	uint8_t dest_addr_med;
-	uint8_t dest_addr_high;
+	uint8_t upload_addr_med;
+	uint8_t upload_addr_high;
 	uint8_t source_addr_med;
 	uint8_t num_256b_pages;
-};
-
-struct UploadDataFilenameCmd {
-	uint8_t dest_addr_med;
-	uint8_t dest_addr_high;
-	uint8_t filename_length;
-	const char* filename;  // don't include the trailing null either in the data or counted in the filename_length
 };
 
 struct DefineImageAssetCmd {
@@ -111,20 +85,14 @@ struct DefineImageAssetCmd {
 	uint16_t upload_page_count;
 };
 
-struct DefineImageAssetFilenameCmd {
-	uint8_t asset_index;
-	uint8_t filename_length;
-	const char* filename;  // don't include the trailing null either in the data or counted in the filename_length
-};
-
 struct DefineTilesetCmd {
 	uint8_t tileset_index;
 	uint8_t num_entries;
 	uint8_t xdim;
 	uint8_t ydim;
 	uint8_t asset_index;
-	uint8_t data_med;
-	uint8_t data_high;
+	uint8_t upload_addr_med;
+	uint8_t upload_addr_high;
 };
 
 struct DefineTilesetImmediateCmd {
@@ -203,7 +171,40 @@ struct UpdateWindowEnableCmd {
 	bool enabled;
 };
 
-#pragma pack(pop)
+#pragma pop()
+
+class SDHRCommand;	// forward declaration
+
+/**
+ * @brief SDHRCommandBatcher
+ * Writes the complete command batch to SHM along with a SDHR_CMD_READY flag
+ * Call GameLink::SDHR_process() to have AppleWin process them
+*/
+class SDHRCommandBatcher
+{
+public:
+	SDHRCommandBatcher(std::string server_ip, int server_port);
+	~SDHRCommandBatcher();
+
+	// Stream of subcommands to add to the command
+	// They'll be processed in FIFO.
+	void AddCommand(SDHRCommand* command);
+
+	void SDHR_On();
+	void SDHR_Off();
+	void SDHR_Reset();
+	// Publishes the queued commands.
+	void SDHR_Process();
+
+	bool isConnected = false;
+	BusPacket packet = { 0 };
+	SOCKET client_socket = NULL;
+
+private:
+	std::vector<SDHRCommand*> v_cmds;
+	sockaddr_in server_addr = { 0 };
+};
+
 
 /**
  * @brief SDHRCommand
@@ -215,7 +216,7 @@ class SDHRCommand
 {
 public:
 	SDHR_CMD id = SDHR_CMD::NONE;
-	std::vector<uint8_t> v_data;
+	std::vector<uint8_t> v_data;		// Command data
 protected:
 	void InsertSizeHeader();
 };
@@ -226,22 +227,10 @@ public:
 	SDHRCommand_UploadData(UploadDataCmd* cmd);
 };
 
-class SDHRCommand_UploadDataFilename : public SDHRCommand
-{
-public:
-	SDHRCommand_UploadDataFilename(UploadDataFilenameCmd* cmd);
-};
-
 class SDHRCommand_DefineImageAsset : public SDHRCommand
 {
 public:
 	SDHRCommand_DefineImageAsset(DefineImageAssetCmd* cmd);
-};
-
-class SDHRCommand_DefineImageAssetFilename : public SDHRCommand
-{
-public:
-	SDHRCommand_DefineImageAssetFilename(DefineImageAssetFilenameCmd* cmd);
 };
 
 class SDHRCommand_DefineTileset : public SDHRCommand
