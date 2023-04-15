@@ -72,7 +72,7 @@ static uint8_t UploadDataFilename(UploadDataFilenameCmd* cmd, const uint8_t sour
 	f.seekg(0, std::ios::beg);
 	char fval;
 	uint64_t bytes_read = 0;
-	uint8_t num_256b_pages = 0;
+	uint16_t num_256b_pages = 0;
 	b->packet.pad = 0;
 	while (!f.eof())
 	{
@@ -82,9 +82,9 @@ static uint8_t UploadDataFilename(UploadDataFilenameCmd* cmd, const uint8_t sour
 			{
 				// send each page one at a time
 				upCmd.source_addr_med = source_addr_med;
-				upCmd.upload_addr_med = (uint8_t)(bytes_read >> 8);
-				upCmd.upload_addr_high = (uint8_t)(bytes_read >> 16);
-				memaddr = upCmd.source_addr_med << 8;
+				upCmd.upload_addr_med = (uint8_t)(num_256b_pages - 1);
+				upCmd.upload_addr_high = (uint8_t)((num_256b_pages - 1) >> 8);
+				memaddr = source_addr_med << 8;
 				auto up_cmd = SDHRCommand_UploadData(&upCmd);
 				b->AddCommand(&up_cmd);
 				b->SDHR_Process();
@@ -717,15 +717,15 @@ int main(int, char**)
 			{
                 ImGui::Text(data_filename.c_str());
 				ImGui::SameLine();
-                if (ImGui::Button("Select File###"))
+                if (ImGui::Button("Select File##du"))
                 {
                     dialog_data.OpenDialog("ChooseAssetDlgKey", "Select File", ".*", "./Assets", -1, nullptr,
                         ImGuiFileDialogFlags_NoDialog |
                         ImGuiFileDialogFlags_DisableCreateDirectoryButton |
                         ImGuiFileDialogFlags_ReadOnlyFileNameField);
                 }
-                ImGui::SliderInt("Med Byte###", &data_dest_addr_med, 0, 255);
-				ImGui::SliderInt("High Byte###", &data_dest_addr_high, 0, 255);
+                ImGui::SliderInt("Med Byte##du", &data_dest_addr_med, 0, 255);
+				ImGui::SliderInt("High Byte##du", &data_dest_addr_high, 0, 255);
 				if (dialog_data.Display("ChooseAssetDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(0, 0), ImVec2(0, 250)))
 				{
 					// action if OK
@@ -736,7 +736,7 @@ int main(int, char**)
 					// close
                     dialog_data.Close();
 				}
-				if (ImGui::Button("Process Data Upload"))
+				if (ImGui::Button("Process Data Upload##du"))
 				{
 					ini["Data"]["Data_dest_addr_med"] = data_dest_addr_med;
 					ini["Data"]["Data_dest_addr_high"] = data_dest_addr_high;
