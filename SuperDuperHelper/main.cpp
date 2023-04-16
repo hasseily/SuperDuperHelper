@@ -110,8 +110,8 @@ static uint8_t UploadDataFilename(UploadDataFilenameCmd* cmd, const uint8_t sour
 	}
 	// Send the last page
 	upCmd.source_addr_med = source_addr_med;
-	upCmd.upload_addr_med = (uint8_t)(bytes_read >> 8);
-	upCmd.upload_addr_high = (uint8_t)(bytes_read >> 16);
+	upCmd.upload_addr_med = (uint8_t)(num_256b_pages - 1);
+	upCmd.upload_addr_high = (uint8_t)((num_256b_pages - 1) >> 8);
 	memaddr = upCmd.source_addr_med << 8;
 	auto up_cmd = SDHRCommand_UploadData(&upCmd);
 	b->AddCommand(&up_cmd);
