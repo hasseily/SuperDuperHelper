@@ -528,7 +528,7 @@ int main(int, char**)
                 DefineWindowCmd w;
                 w.window_index = 0;
                 w.black_or_wrap = false;
-                w.screen_xcount = 336;
+                w.screen_xcount = 624;
                 w.screen_ycount = 336;
                 w.screen_xbegin = 0;
                 w.screen_ybegin = 0;
@@ -546,7 +546,7 @@ int main(int, char**)
                 w2.black_or_wrap = false;
                 w2.screen_xcount = 16;
                 w2.screen_ycount = 16;
-                w2.screen_xbegin = 160;
+                w2.screen_xbegin = 304;
                 w2.screen_ybegin = 160;
                 w2.tile_xbegin = 0;
                 w2.tile_ybegin = 0;
@@ -625,9 +625,9 @@ int main(int, char**)
 
             if (ImGui::Button("North"))
             {
-                for (auto i = 0; i < 8; ++i) {
+                for (auto i = 0; i < 2; ++i) {
                     auto batcher = SDHRCommandBatcher(server_ip, server_port);
-                    tile_posy -= 2;
+                    tile_posy -= 8;
                     scWP.tile_ybegin = tile_posy;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
@@ -636,9 +636,9 @@ int main(int, char**)
             }
             if (ImGui::Button("South"))
             {
-                for (auto i = 0; i < 8; ++i) {
+                for (auto i = 0; i < 2; ++i) {
                     auto batcher = SDHRCommandBatcher(server_ip, server_port);
-                    tile_posy += 2;
+                    tile_posy += 8;
                     scWP.tile_ybegin = tile_posy;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
@@ -647,9 +647,9 @@ int main(int, char**)
             }
             if (ImGui::Button("East"))
             {
-                for (auto i = 0; i < 8; ++i) {
+                for (auto i = 0; i < 2; ++i) {
                     auto batcher = SDHRCommandBatcher(server_ip, server_port);
-                    tile_posx += 2;
+                    tile_posx += 8;
                     scWP.tile_xbegin = tile_posx;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
@@ -658,9 +658,9 @@ int main(int, char**)
             }
             if (ImGui::Button("West"))
             {
-                for (auto i = 0; i < 8; ++i) {
+                for (auto i = 0; i < 2; ++i) {
                     auto batcher = SDHRCommandBatcher(server_ip, server_port);
-                    tile_posx -= 2;
+                    tile_posx -= 8;
                     scWP.tile_xbegin = tile_posx;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
@@ -1202,8 +1202,8 @@ int main(int, char**)
 				static int _uwadjview_x = 0;
 				static int _uwadjview_y = 0;
 				ImGui::Text("Adjust the window view by defining the top left tile xy");
-				ImGui::PushItemWidth(80.f);
-				ImGui::InputInt("TileX##uwadjview", &_uwadjview_x); ImGui::SameLine(150); ImGui::InputInt("TileY##uwadjview", &_uwadjview_y);
+				ImGui::PushItemWidth(120.f);
+				ImGui::InputInt("TileX##uwadjview", &_uwadjview_x); ImGui::SameLine(190); ImGui::InputInt("TileY##uwadjview", &_uwadjview_y);
 				ImGui::PopItemWidth();
 				if (ImGui::Button("Adjust Window View##uwadjview"))
 				{
@@ -1212,6 +1212,11 @@ int main(int, char**)
 					_wcmd.window_index = _vWindowIndex;
 					_wcmd.tile_xbegin = _uwadjview_x;
 					_wcmd.tile_ybegin = _uwadjview_y;
+					if (_vWindowIndex == 0)	// sync the main window with the N/E/S/W direction commands
+					{
+						tile_posx = _uwadjview_x;
+						tile_posy = _uwadjview_y;
+					}
 					auto w_updateb_cmd = SDHRCommand_UpdateWindowAdjustWindowView(&_wcmd);
 					batcher.AddCommand(&w_updateb_cmd);
 					batcher.SDHR_Process();
