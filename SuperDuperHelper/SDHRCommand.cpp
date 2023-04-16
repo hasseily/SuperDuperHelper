@@ -2,14 +2,16 @@
 #include <fstream>
 #include "ImGuiFileDialog/stb/stb_image.h"
 
-SDHRCommandBatcher::SDHRCommandBatcher(std::string server_ip, int server_port)
+bool SDHRCommandBatcher::Connect(std::string server_ip, int server_port)
 {
+	if (client_socket > 0)
+		closesocket(client_socket);
 	WSADATA wsaData;
 	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (result != 0) {
 		std::cerr << "WSAStartup failed: " << result << std::endl;
 		isConnected = false;
-		return;
+		return isConnected;
 	}
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(server_port);
@@ -21,18 +23,19 @@ SDHRCommandBatcher::SDHRCommandBatcher(std::string server_ip, int server_port)
 		std::cerr << "Error creating socket: " << WSAGetLastError() << std::endl;
 		WSACleanup();
 		isConnected = false;
-		return;
+		return isConnected;
 	}
 	if (connect(client_socket, (sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
 		std::cerr << "Error connecting to server: " << WSAGetLastError() << std::endl;
 		closesocket(client_socket);
 		WSACleanup();
 		isConnected = false;
-		return;
+		return isConnected;
 	}
 	isConnected = true;
 
 	packet.pad = 0;
+	return isConnected;
 }
 
 SDHRCommandBatcher::~SDHRCommandBatcher()

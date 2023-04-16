@@ -183,7 +183,7 @@ class SDHRCommand;	// forward declaration
 class SDHRCommandBatcher
 {
 public:
-	SDHRCommandBatcher(std::string server_ip, int server_port);
+	bool Connect(std::string server_ip, int server_port);
 	~SDHRCommandBatcher();
 
 	// Stream of subcommands to add to the command

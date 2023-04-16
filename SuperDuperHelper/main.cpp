@@ -42,8 +42,9 @@ std::map<int, bool> keyboard; // Saves the state(true=pressed; false=released) o
 #define APPLE2_MEM_LOW	 0x02	//	Lower bound (med byte) of Apple 2 memory allowed to use
 #define APPLE2_MEM_HIGH	 0xBF	//	Upper bound (med byte) of Apple 2 memory allowed to use
 
-static uint8_t UploadDataFilename(UploadDataFilenameCmd* cmd, const uint8_t source_addr_med,
-	SDHRCommandBatcher* b)
+static SDHRCommandBatcher batcher;
+
+static uint8_t UploadDataFilename(UploadDataFilenameCmd* cmd, const uint8_t source_addr_med)
 {
 	if (cmd->filename_length == 0)
 		return 0;
@@ -73,7 +74,7 @@ static uint8_t UploadDataFilename(UploadDataFilenameCmd* cmd, const uint8_t sour
 	char fval;
 	uint64_t bytes_read = 0;
 	uint16_t num_256b_pages = 0;
-	b->packet.pad = 0;
+	batcher.packet.pad = 0;
 	while (!f.eof())
 	{
 		if (bytes_read % 256 == 0)
@@ -86,26 +87,26 @@ static uint8_t UploadDataFilename(UploadDataFilenameCmd* cmd, const uint8_t sour
 				upCmd.upload_addr_high = (uint8_t)((num_256b_pages - 1) >> 8);
 				memaddr = source_addr_med << 8;
 				auto up_cmd = SDHRCommand_UploadData(&upCmd);
-				b->AddCommand(&up_cmd);
-				b->SDHR_Process();
+				batcher.AddCommand(&up_cmd);
+				batcher.SDHR_Process();
 			}
 			++num_256b_pages;
 		}
 		// Send the file through the network one byte at a time,
 		// as if it were the Apple 2 card bus
 		f.read(&fval, sizeof(char));
-		b->packet.addr = memaddr++;
-		b->packet.data = fval;
-		send(b->client_socket, (char*)&b->packet, 4, 0);
+		batcher.packet.addr = memaddr++;
+		batcher.packet.data = fval;
+		send(batcher.client_socket, (char*)&batcher.packet, 4, 0);
 		++bytes_read;
 	}
 	// Fill the rest of the page with 0s
 	while (bytes_read % 256 > 0)
 	{
 		BusPacket bp;
-		b->packet.addr = memaddr++;
+		batcher.packet.addr = memaddr++;
 		bp.data = 0;
-		send(b->client_socket, (char*)&b->packet, 4, 0);
+		send(batcher.client_socket, (char*)&batcher.packet, 4, 0);
 		++bytes_read;
 	}
 	// Send the last page
@@ -114,8 +115,8 @@ static uint8_t UploadDataFilename(UploadDataFilenameCmd* cmd, const uint8_t sour
 	upCmd.upload_addr_high = (uint8_t)((num_256b_pages - 1) >> 8);
 	memaddr = upCmd.source_addr_med << 8;
 	auto up_cmd = SDHRCommand_UploadData(&upCmd);
-	b->AddCommand(&up_cmd);
-	b->SDHR_Process();
+	batcher.AddCommand(&up_cmd);
+	batcher.SDHR_Process();
 	return num_256b_pages;
 }
 
@@ -143,9 +144,8 @@ static void UploadImageFilename(DefineImageAssetFilenameCmd* cmd, const uint8_t 
 	upfcmd.filename_length = cmd->filename_length;
 	upfcmd.upload_addr_med = 0;
 	upfcmd.upload_addr_high = 0;
-	auto b = SDHRCommandBatcher(server_ip, server_port);
 
-	uint8_t num_256b_pages = UploadDataFilename(&upfcmd, source_addr_med, &b);
+	uint8_t num_256b_pages = UploadDataFilename(&upfcmd, source_addr_med);
 	if (num_256b_pages == 0)
 		return;
 
@@ -157,8 +157,8 @@ static void UploadImageFilename(DefineImageAssetFilenameCmd* cmd, const uint8_t 
 	asset_cmd.upload_addr_high = 0;
 	asset_cmd.upload_page_count = num_256b_pages;
 	auto assetc = SDHRCommand_DefineImageAsset(&asset_cmd);
-	b.AddCommand(&assetc);
-	b.SDHR_Process();
+	batcher.AddCommand(&assetc);
+	batcher.SDHR_Process();
 }
 
 
@@ -444,7 +444,7 @@ int main(int, char**)
 
             if (ImGui::Checkbox("Enable SuperDuperHiRes (SDHR)", &activate_sdhr))
             {
-				auto batcher = SDHRCommandBatcher(server_ip, server_port);
+				batcher.Connect(server_ip, server_port);
                 if (activate_sdhr)
                 {
                     batcher.SDHR_On();
@@ -483,7 +483,7 @@ int main(int, char**)
 				imgasset_cmd.filename = asset_name.c_str();
 				UploadImageFilename(&imgasset_cmd, 0x20, server_ip, server_port);
 
-				auto batcher = SDHRCommandBatcher(server_ip, server_port);
+				
 
 				// Load an asset by just uploading the data
 				// This one loads at 0x00
@@ -494,7 +494,7 @@ int main(int, char**)
                 upload_tilesf.upload_addr_high = 0;
                 upload_tilesf.filename_length = tilefile.length();
                 upload_tilesf.filename = tilefile.c_str();
-				UploadDataFilename(&upload_tilesf, APPLE2_MEM_LOW, &batcher);
+				UploadDataFilename(&upload_tilesf, APPLE2_MEM_LOW);
 
                 std::vector<uint16_t> set1_addresses;
                 std::vector<uint16_t> set2_addresses;
@@ -608,7 +608,7 @@ int main(int, char**)
    //                 int64_t tile_ybegin;
    //             };
    //             scWP.screen_xbegin = sprite_pos_abs_h;
-			//	auto batcher = SDHRCommandBatcher(server_ip, server_port);
+			//	
 			//	auto c1 = SDHRCommand_UpdateWindowSetWindowPosition(&scWP);
 			//	batcher.AddCommand(&c1);
 			//	batcher.SDHR_process();
@@ -617,7 +617,7 @@ int main(int, char**)
 			//if (ImGui::SliderInt("Move Sprite Vertical", &sprite_pos_abs_v, 0, 360))
 			//{
 			//	scWP.screen_ybegin = sprite_pos_abs_v;
-			//	auto batcher = SDHRCommandBatcher(server_ip, server_port);
+			//	
 			//	auto c1 = SDHRCommand_UpdateWindowSetWindowPosition(&scWP);
 			//	batcher.AddCommand(&c1);
 			//	batcher.SDHR_process();
@@ -625,9 +625,9 @@ int main(int, char**)
 
             if (ImGui::Button("North"))
             {
-                for (auto i = 0; i < 2; ++i) {
-                    auto batcher = SDHRCommandBatcher(server_ip, server_port);
-                    tile_posy -= 8;
+                for (auto i = 0; i < 4; ++i) {
+                    
+                    tile_posy -= 4;
                     scWP.tile_ybegin = tile_posy;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
@@ -636,9 +636,9 @@ int main(int, char**)
             }
             if (ImGui::Button("South"))
             {
-                for (auto i = 0; i < 2; ++i) {
-                    auto batcher = SDHRCommandBatcher(server_ip, server_port);
-                    tile_posy += 8;
+                for (auto i = 0; i < 4; ++i) {
+                    
+                    tile_posy += 4;
                     scWP.tile_ybegin = tile_posy;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
@@ -647,9 +647,9 @@ int main(int, char**)
             }
             if (ImGui::Button("East"))
             {
-                for (auto i = 0; i < 2; ++i) {
-                    auto batcher = SDHRCommandBatcher(server_ip, server_port);
-                    tile_posx += 8;
+                for (auto i = 0; i < 4; ++i) {
+                    
+                    tile_posx += 4;
                     scWP.tile_xbegin = tile_posx;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
@@ -658,9 +658,9 @@ int main(int, char**)
             }
             if (ImGui::Button("West"))
             {
-                for (auto i = 0; i < 2; ++i) {
-                    auto batcher = SDHRCommandBatcher(server_ip, server_port);
-                    tile_posx -= 8;
+                for (auto i = 0; i < 4; ++i) {
+                    
+                    tile_posx -= 4;
                     scWP.tile_xbegin = tile_posx;
                     auto c1 = SDHRCommand_UpdateWindowAdjustWindowView(&scWP);
                     batcher.AddCommand(&c1);
@@ -670,7 +670,7 @@ int main(int, char**)
 
 			if (ImGui::Button("Reset"))
 			{
-				auto batcher = SDHRCommandBatcher(server_ip, server_port);
+				
 				batcher.SDHR_Reset();
 			}
 
@@ -742,13 +742,13 @@ int main(int, char**)
 					ini["Data"]["Data_dest_addr_high"] = data_dest_addr_high;
 					ini["Data"]["Data_filename"] = data_filename;
 					file.write(ini);
-					auto batcher = SDHRCommandBatcher(server_ip, server_port);
+					
                     UploadDataFilenameCmd _udc;
                     _udc.upload_addr_med = (uint8_t)data_dest_addr_med;
 					_udc.upload_addr_high = (uint8_t)data_dest_addr_high;
                     _udc.filename_length = (uint8_t)data_filename.length();
                     _udc.filename = data_filename.c_str();
-					UploadDataFilename(&_udc, APPLE2_MEM_LOW, &batcher);
+					UploadDataFilename(&_udc, APPLE2_MEM_LOW);
 				}
 			}
 			if (ImGui::CollapsingHeader("Image Asset 0"))
@@ -841,7 +841,7 @@ int main(int, char**)
 					ini["Tileset"]["Tileset0_xdim"] = tileset0_xdim;
 					ini["Tileset"]["Tileset0_ydim"] = tileset0_ydim;
 					file.write(ini);
-					auto batcher = SDHRCommandBatcher(server_ip, server_port);
+					
                     DefineTilesetImmediateCmd _udc;
 					_udc.tileset_index = (uint8_t)tileset0_index;
 					_udc.num_entries = (uint8_t)tileset0_num_entries;   // 256 becomes 0
@@ -884,7 +884,7 @@ int main(int, char**)
 					ini["Tileset"]["Tileset0_xdim"] = tileset1_xdim;
 					ini["Tileset"]["Tileset0_ydim"] = tileset1_ydim;
 					file.write(ini);
-					auto batcher = SDHRCommandBatcher(server_ip, server_port);
+					
 					DefineTilesetImmediateCmd _udc;
 					_udc.tileset_index = (uint8_t)tileset1_index;
 					_udc.num_entries = (uint8_t)tileset1_num_entries;   // 256 becomes 0
@@ -936,7 +936,7 @@ int main(int, char**)
 					ini["Window"]["Window0_tile_xcount"] = window0_tile_xcount;
 					ini["Window"]["Window0_tile_ycount"] = window0_tile_ycount;
 					file.write(ini);
-					auto batcher = SDHRCommandBatcher(server_ip, server_port);
+					
                     DefineWindowCmd _udc;
 					_udc.window_index = window0_index;
 					_udc.black_or_wrap = window0_black_or_wrap;
@@ -994,7 +994,7 @@ int main(int, char**)
 					ini["Window"]["Window1_tile_xcount"] = window1_tile_xcount;
 					ini["Window"]["Window1_tile_ycount"] = window1_tile_ycount;
 					file.write(ini);
-					auto batcher = SDHRCommandBatcher(server_ip, server_port);
+					
 					DefineWindowCmd _udc;
 					_udc.window_index = window1_index;
 					_udc.black_or_wrap = window1_black_or_wrap;
@@ -1040,7 +1040,7 @@ int main(int, char**)
 				}
 				if (_bState > 0)
 				{
-					auto batcher = SDHRCommandBatcher(server_ip, server_port);
+					
 					UpdateWindowEnableCmd w_enable;
 					w_enable.window_index = _vWindowIndex;
 					w_enable.enabled = _bState - 1;
@@ -1067,7 +1067,7 @@ int main(int, char**)
 				ImGui::SliderInt("High Byte##uwsu", &_uwsu_addr_high, 0, 255);
 				if (ImGui::Button("Update##uwsu"))
 				{
-					auto batcher = SDHRCommandBatcher(server_ip, server_port);
+					
 					UpdateWindowSetUploadCmd _wcmd;
 					_wcmd.window_index = _vWindowIndex;
 					_wcmd.tile_xbegin = _uwsu_tile_xbegin;
@@ -1101,7 +1101,7 @@ int main(int, char**)
 				ImGui::InputInt4("Data##uwst", _uwst_data);
 				if (ImGui::Button("Update##uwst"))
 				{
-					auto batcher = SDHRCommandBatcher(server_ip, server_port);
+					
 					UpdateWindowSingleTilesetCmd _wcmd;
 					_wcmd.window_index = _vWindowIndex;
 					_wcmd.tile_xbegin = _uwst_tile_xbegin;
@@ -1140,7 +1140,7 @@ int main(int, char**)
 				ImGui::InputInt4("Index##uwsb", _uwsb_data);
 				if (ImGui::Button("Update##uwsb"))
 				{
-					auto batcher = SDHRCommandBatcher(server_ip, server_port);
+					
 					UpdateWindowSetBothCmd _wcmd;
 					_wcmd.window_index = _vWindowIndex;
 					_wcmd.tile_xbegin = _uwsb_tile_xbegin;
@@ -1167,7 +1167,7 @@ int main(int, char**)
 				ImGui::SliderInt("Shift Y##uwshift", &_uwshift_y, -127, 127);
 				if (ImGui::Button("Shift Tiles##uwshift"))
 				{
-					auto batcher = SDHRCommandBatcher(server_ip, server_port);
+					
 					UpdateWindowShiftTilesCmd _wcmd;
 					_wcmd.window_index = _vWindowIndex;
 					_wcmd.x_dir = _uwshift_x;
@@ -1187,7 +1187,7 @@ int main(int, char**)
 				ImGui::PopItemWidth();
 				if (ImGui::Button("Set Window Position##uwsetwin"))
 				{
-					auto batcher = SDHRCommandBatcher(server_ip, server_port);
+					
 					UpdateWindowSetWindowPositionCmd _wcmd;
 					_wcmd.window_index = _vWindowIndex;
 					_wcmd.screen_xbegin = _uwsetwin_x;
@@ -1207,7 +1207,7 @@ int main(int, char**)
 				ImGui::PopItemWidth();
 				if (ImGui::Button("Adjust Window View##uwadjview"))
 				{
-					auto batcher = SDHRCommandBatcher(server_ip, server_port);
+					
 					UpdateWindowAdjustWindowViewCmd _wcmd;
 					_wcmd.window_index = _vWindowIndex;
 					_wcmd.tile_xbegin = _uwadjview_x;
