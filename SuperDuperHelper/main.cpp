@@ -1163,8 +1163,8 @@ int main(int, char**)
 			{
 				static int _uwshift_x = 0;
 				static int _uwshift_y = 0;
-				ImGui::SliderInt("Shift X##uwshift", &_uwshift_x, -127, 127);
-				ImGui::SliderInt("Shift Y##uwshift", &_uwshift_y, -127, 127);
+				ImGui::SliderInt("Shift X##uwshift", &_uwshift_x, -1, 1);
+				ImGui::SliderInt("Shift Y##uwshift", &_uwshift_y, -1, 1);
 				if (ImGui::Button("Shift Tiles##uwshift"))
 				{
 					
